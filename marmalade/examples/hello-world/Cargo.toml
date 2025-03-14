@@ -1,14 +1,10 @@
 [package]
-name = "upsi5"
+name = "hello-world"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-<<<<<<< HEAD
-glam = "0.30.0"
-=======
+marmalade = { path = "../../" }
 console_error_panic_hook = "0.1.7"
 glam = "0.30.0"
-marmalade = { path = "marmalade" }
 wasm-bindgen-futures = "0.4.50"
->>>>>>> ef9f004 (Initial marmalade game)

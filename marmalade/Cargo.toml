@@ -1,0 +1,66 @@
+[package]
+name = "marmalade"
+version = "0.0.1"
+edition = "2024"
+description = "A small toolkit for video games on the web"
+license = "MPL-2.0"
+repository = "https://github.com/puzzle-rs/marmalade"
+homepage = "https://github.com/puzzle-rs/marmalade"
+readme = "README.md"
+categories = ["game-development", "graphics", "gui"]
+keywords = ["gamedev", "web"]
+
+[workspace]
+members = ["examples/hello-world", "examples/bouncing-balls"]
+
+[profile.dev]
+opt-level = 1 # Slight optimization for debug builds
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = true
+opt-level = 3
+
+[dependencies]
+futures-channel = "0.3.31"
+futures-util = "0.3.31"
+glam = "0.30.0"
+js-sys = "0.3.77"
+meshtext = "0.3.1"
+wasm-bindgen = "0.2.100"
+wasm-bindgen-futures = "0.4.50"
+web-sys = { version = "0.3.77", features = [
+    "HtmlImageElement",
+    "Window",
+    "console",
+    "KeyboardEvent",
+    "MouseEvent",
+    "WheelEvent",
+    "AddEventListenerOptions",
+    "HtmlCanvasElement",
+    "OffscreenCanvasRenderingContext2d",
+    "WebGl2RenderingContext",
+    "WebGlContextAttributes",
+    "WebGlShader",
+    "WebGlProgram",
+    "WebGlBuffer",
+    "WebGlVertexArrayObject",
+    "WebGlUniformLocation",
+    "WebGlTexture",
+    "WebSocket",
+    "MessageEvent",
+    "Document",
+    "BinaryType",
+    "OffscreenCanvas",
+    "Performance",
+    "CssStyleDeclaration",
+    "ImageBitmap",
+    "AudioContext",
+    "AudioBufferSourceNode",
+    "AudioBuffer",
+    "AudioDestinationNode",
+    "GainNode",
+    "AudioParam",
+    "Blob",
+] }

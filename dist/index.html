@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <head>
+    
+<script type="module">
+import init, * as bindings from '/upsi5.js';
+const wasm = await init({ module_or_path: '/upsi5_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script>
+  <link rel="modulepreload" href="/upsi5.js" crossorigin="anonymous" integrity="sha384-KKH0ToSo6eZxbxsfhgteFcYXtur5sNAVbgwrKo9+w4yndQ94NmYMW60jUWP8dZsC"><link rel="preload" href="/upsi5_bg.wasm" crossorigin="anonymous" integrity="sha384-93e0eS7/tSGOLEHosP1H0maHcIA3I7v2DkAcmEwuzHMbnuCpWMKtxG+B3HvY0PzO" as="fetch" type="application/wasm"></head>
+</html>
