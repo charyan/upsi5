@@ -1,7 +1,6 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, collections::BTreeMap};
 
 use glam::Vec2;
-use marmalade::console;
 
 use crate::entity::{self, Ball, BallType};
 
@@ -86,7 +85,7 @@ impl World {
         false
     }
 
-    pub fn launch_round(&mut self, mut velocities: Vec<(usize, Vec2)>) {
+    pub fn launch_round(&mut self, velocities: BTreeMap<usize, Vec2>) {
         let mut new_balls = vec![];
         for (index, velocity) in &velocities {
             let ball = self.balls[*index].borrow();
@@ -109,8 +108,6 @@ impl World {
             new_balls.push(RefCell::new(ball1));
             new_balls.push(RefCell::new(ball2));
         }
-
-        velocities.sort_by_key(|(x, _)| *x);
 
         for (index, _) in velocities.iter().rev() {
             self.balls.remove(*index);
