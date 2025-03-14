@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 
 use glam::Vec2;
+use marmalade::console;
 
 use crate::entity::{self, Ball, BallType};
 
@@ -48,11 +49,11 @@ impl World {
             let mut ball = ball_cell.borrow_mut();
             ball.position = ball.position + ball.speed;
             ball.speed = ball.speed * ball.friction_coeff;
+            Self::check_border(&mut ball);
 
             for other_ball_index in index + 1..self.balls.len() {
                 let mut other_ball = self.balls[other_ball_index].borrow_mut();
                 Self::collide(&mut ball, &mut other_ball);
-                Self::check_border(&mut ball);
             }
             if self.in_hole(&ball) {
                 trash.push(index);
