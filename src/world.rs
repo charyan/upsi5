@@ -73,15 +73,14 @@ impl World {
 
     fn in_hole(&self, ball :&entity::Ball) -> bool{
         for hole in &HOLES {
-            let dist = ball.position - hole;
-            if ball.radius + HOLE_RADIUS < dist.length() {
+            if ball.radius + HOLE_RADIUS > ball.position.distance(*hole) {
                 return true
             }
         }
         false
     }
 
-    pub fn launch_round(&mut self, velocities: Vec<(usize, Vec2)>){
+    pub fn launch_round(&mut self, mut velocities: Vec<(usize, Vec2)>){
         let mut new_balls = vec![];
         for (index, velocity) in &velocities{
             let ball = self.balls[*index].borrow();
@@ -90,6 +89,13 @@ impl World {
             new_balls.push(RefCell::new(ball1));
             new_balls.push(RefCell::new(ball2));
         }
+
+        velocities.sort_by_key(|(x,_)| *x);
+
+        for (index, _) in velocities.iter().rev(){
+            self.balls.remove(*index);
+        }
+
         self.balls.extend(new_balls);
     }
 
