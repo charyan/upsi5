@@ -81,6 +81,18 @@ impl World {
         false
     }
 
+    pub fn launch_round(&mut self, velocities: Vec<(usize, Vec2)>){
+        let mut new_balls = vec![];
+        for (index, velocity) in &velocities{
+            let ball = self.balls[*index].borrow();
+            let ball1 = Ball::new(ball.mass, ball.position + velocity.normalize_or_zero()*ball.radius, *velocity, ball.friction_coeff, ball.radius, ball.letypedelaboule);
+            let ball2 = Ball::new(ball.mass, ball.position - velocity.normalize_or_zero()*ball.radius, *velocity *-1., ball.friction_coeff, ball.radius, ball.letypedelaboule);
+            new_balls.push(RefCell::new(ball1));
+            new_balls.push(RefCell::new(ball2));
+        }
+        self.balls.extend(new_balls);
+    }
+
     fn check_border(ball: &mut entity::Ball) {
         if ball.position.x - ball.radius < 0. {
             ball.position.x = ball.radius;

@@ -22,7 +22,7 @@ pub struct Ball{
 }
 
 impl Ball {
-    fn new(mass:f32, position: Vec2, speed:Vec2, friction_coeff: f32, radius: f32, letypedelaboule: BallType) -> Ball {
+    pub fn new(mass:f32, position: Vec2, speed:Vec2, friction_coeff: f32, radius: f32, letypedelaboule: BallType) -> Ball {
         Ball {
             mass,
             position,
