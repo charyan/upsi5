@@ -3,22 +3,25 @@ use std::cell::RefCell;
 
 use glam::Vec2;
 
-use crate::entity;
+use crate::entity::{self, Ball, BallType};
 
 const COLLISION_SMOOTHNESS: f32 = 0.03;
 
+const WORLD_DIM:Vec2 = Vec2::new(1.850, 0.925);
+const HOLE_RADIUS: f32 = 0.038;
+const HOLES:[Vec2; 6] = [Vec2::ZERO, Vec2::new(0., WORLD_DIM.y),Vec2::new(WORLD_DIM.x/2., 0.), Vec2::new(WORLD_DIM.x/2., WORLD_DIM.y), Vec2::new(WORLD_DIM.x, 0.), Vec2::new(WORLD_DIM.x, WORLD_DIM.y)];
+
 pub struct World {
     pub balls: Vec<RefCell<entity::Ball>>,
-    width: f32,
-    height: f32,
+    money : u32,
+
 }
 
 impl World {
-    pub fn new(width: f32, height: f32) -> Self{
+    pub fn new() -> Self{
         Self {
-            width,
-            height,
-            balls: vec![]
+            balls: vec![],
+            money: 0,
         }
     }
 
@@ -28,12 +31,14 @@ impl World {
             radius,
             mass,
             speed: Vec2::ZERO,
-            friction_coeff
+            friction_coeff,
+            letypedelaboule: entity::BallType::Player
         };
         self.balls.push(RefCell::new(new_ball));
     }
 
-    pub fn tick(&mut self) {
+    pub fn tick(&mut self) -> bool{
+        let mut trash = vec![];
         for (index, ball_cell) in self.balls.iter().enumerate() {
             let mut ball = ball_cell.borrow_mut();
             ball.position =ball.position + ball.speed;
@@ -42,25 +47,54 @@ impl World {
             for other_ball_index in index+1..self.balls.len() {
                 let mut other_ball = self.balls[other_ball_index].borrow_mut();
                 Self::collide(&mut ball, &mut other_ball);
-                self.check_border(&mut ball);
+                Self::check_border(&mut ball);
+            }
+            if self.in_hole(&ball) {
+                trash.push(index);
+                if let BallType::Enemy (enemy) = ball.letypedelaboule {
+                    self.money += enemy.price;
+                }
             }
         }
+
+        for bye_bye in trash.into_iter().rev() {
+            self.balls.remove(bye_bye);
+        }
+
+        for ball in &self.balls{
+            let ball = ball.borrow();
+            if ball.speed.length() > 0.00001{
+                return true
+            }
+        }
+
+        false
     }
 
-    fn check_border(&self, ball: &mut entity::Ball) {
+    fn in_hole(&self, ball :&entity::Ball) -> bool{
+        for hole in &HOLES {
+            let dist = ball.position - hole;
+            if ball.radius + HOLE_RADIUS < dist.length() {
+                return true
+            }
+        }
+        false
+    }
+
+    fn check_border(ball: &mut entity::Ball) {
         if ball.position.x - ball.radius < 0. {
             ball.position.x = ball.radius;
             ball.speed.x = -ball.speed.x;
-        } else if ball.position.x + ball.radius > self.width {
-            ball.position.x = self.width - ball.radius;
+        } else if ball.position.x + ball.radius > WORLD_DIM.x {
+            ball.position.x = WORLD_DIM.x - ball.radius;
             ball.speed.x = -ball.speed.x;
         }
     
         if ball.position.y - ball.radius < 0. {
             ball.position.y = ball.radius;
             ball.speed.y = -ball.speed.y;
-        } else if ball.position.y + ball.radius > self.height {
-            ball.position.y = self.height - ball.radius;
+        } else if ball.position.y + ball.radius > WORLD_DIM.y {
+            ball.position.y = WORLD_DIM.y - ball.radius;
             ball.speed.y = -ball.speed.y;
         }
     }
