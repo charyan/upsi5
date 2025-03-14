@@ -1,65 +1,80 @@
 use glam::Vec2;
+use marmalade::console;
 use marmalade::dom_stack;
 use marmalade::draw_scheduler;
-use marmalade::font;
-use marmalade::font::Font;
+use marmalade::image;
 use marmalade::input;
-use marmalade::input::Key;
+use marmalade::input::Button;
 use marmalade::render::canvas2d::Canvas2d;
 use marmalade::render::canvas2d::DrawTarget2d;
+use marmalade::render::canvas2d::TextureRect;
 use marmalade::render::color;
 use marmalade::tick_scheduler::TickScheduler;
-use std::cell::RefCell;
 use std::time::Duration;
+use world::WORLD_DIM;
+use world::World;
 
 mod entity;
 mod world;
 
-fn game_tick(position: &mut Vec2) {
-    if input::is_key_down(Key::A) {
-        position.x -= 0.5;
-    }
-    if input::is_key_down(Key::D) {
-        position.x += 0.5;
-    }
-    if input::is_key_down(Key::S) {
-        position.y -= 0.5;
-    }
-    if input::is_key_down(Key::W) {
-        position.y += 0.5;
-    }
+fn game_tick(world: &mut World) {
+    world.tick();
 }
 
-fn render_tick(canvas: &mut Canvas2d, font: &mut Font, position: Vec2) {
+struct Resources {
+    pool_table: TextureRect,
+}
+
+fn render_tick(canvas: &mut Canvas2d, world: &World, resources: &Resources) {
     canvas.fit_screen();
 
     canvas.pixel_perfect_view();
 
     canvas.clear(color::rgb(0., 0., 0.));
 
-    canvas.draw_regular(
-        position,
-        100.,
-        64,
-        color::rgb(1., 0.5, 0.5),
-        &canvas.white_texture(),
+    canvas.camera_view(WORLD_DIM / 2., WORLD_DIM.x / 2.);
+
+    canvas.draw_rect(
+        Vec2::new(0., 0.),
+        WORLD_DIM,
+        color::WHITE,
+        &resources.pool_table,
     );
 
-    canvas.draw_text(
-        Vec2::new(100., 100.),
-        50.,
-        "Welcome to the pool",
-        font,
-        color::rgb(1., 1., 1.),
-        &canvas.white_texture(),
-    );
+    for ball in &world.balls {
+        canvas.draw_regular(
+            ball.borrow().position,
+            ball.borrow().radius,
+            64,
+            color::rgb(1., 0.5, 0.5),
+            &canvas.white_texture(),
+        );
+    }
+
+    if input::is_button_down(Button::Left) {
+        let mouse_pos = input::mouse_position().as_vec2();
+
+        for b in &world.balls {
+            if b.borrow()
+                .position
+                .distance(canvas.screen_to_world_pos(mouse_pos))
+                < b.borrow().radius
+            {
+                canvas.draw_regular(
+                    b.borrow().position,
+                    b.borrow().radius,
+                    64,
+                    color::rgb(1., 1., 1.),
+                    &canvas.white_texture(),
+                );
+            }
+        }
+    }
 
     canvas.flush();
 }
 
 async fn async_main() {
-    let a = RefCell::new(String::new());
-
     dom_stack::set_title("Slime Pool");
 
     let main_canvas = dom_stack::create_full_screen_canvas();
@@ -68,18 +83,26 @@ async fn async_main() {
 
     let mut canvas = Canvas2d::new(&main_canvas);
 
-    let mut font = font::from_bytes(font::MONOGRAM);
+    let pool_table = image::from_bytes(include_bytes!("../assets/pool_table.png")).await;
 
-    let mut position = Vec2::new(300., 300.);
+    let pool_table = canvas.create_texture(&pool_table);
+
+    let resources = Resources { pool_table };
+
+    let mut world = World::new();
+
+    world.add_ball(Vec2::new(0.2, 0.5), 0.010, 1., 0.999);
+
+    world.balls[0].borrow_mut().speed = Vec2::new(0.0005, 0.0005);
 
     let mut tick_scheduler = TickScheduler::new(Duration::from_millis(1));
 
     draw_scheduler::set_on_draw(move || {
         for _ in 0..tick_scheduler.tick_count() {
-            game_tick(&mut position);
+            game_tick(&mut world);
         }
 
-        render_tick(&mut canvas, &mut font, position);
+        render_tick(&mut canvas, &world, &resources);
     });
 }
 

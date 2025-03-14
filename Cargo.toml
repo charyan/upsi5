@@ -3,6 +3,9 @@ name = "upsi5"
 version = "0.1.0"
 edition = "2024"
 
+[profile.dev]
+opt-level = 1
+
 [dependencies]
 console_error_panic_hook = "0.1.7"
 glam = "0.30.0"
