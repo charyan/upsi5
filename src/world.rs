@@ -1,9 +1,8 @@
 use std::{cell::RefCell, collections::BTreeMap};
 
 use glam::Vec2;
-use marmalade::console;
-
-use crate::entity::{self, Ball, BallType};
+use marmalade::rand;
+use crate::entity::{self, Ball, BallType, EnemyData};
 
 const COLLISION_SMOOTHNESS: f32 = 0.03;
 
@@ -26,23 +25,61 @@ pub struct World {
 
 impl World {
     pub fn new() -> Self {
-        Self {
+        let mut new_world = World {
             balls: vec![],
             money: 0,
-            round: 1,
-        }
+            round:1
+        };
+        new_world.add_ball(Vec2::new(WORLD_DIM.x / 4., WORLD_DIM.y/2.), 0.025, 1., 0.9995, entity::BallType::Player);
+        new_world
     }
 
-    pub fn spawn_round(&mut self) {}
+    pub fn spawn_round(&mut self) {
+        let x1 = HOLE_RADIUS;
+        let x2 = WORLD_DIM.x - HOLE_RADIUS;
+        let y1 = HOLE_RADIUS;
+        let y2 = WORLD_DIM.y - HOLE_RADIUS;
 
-    pub fn add_ball(&mut self, position: Vec2, radius: f32, mass: f32, friction_coeff: f32) {
+        let new_radius = self.round as f32 * 0.01;
+        let new_mass = self.round as f32 * 1.;
+        let new_friction_coeff = 0.9995;
+        let mut pos_not_ok = true;
+        let mut new_pos;
+        
+        while pos_not_ok{
+            new_pos = Vec2::new(rand::rand_range(x1 as f64, x2 as f64) as f32, rand::rand_range(y1 as f64,y2 as f64) as f32);
+            pos_not_ok = false;
+            for index in 0..self.balls.len() {
+                let ball = self.balls[index].borrow();
+        
+                let dist = ball.position - new_pos;
+        
+                if ball.radius + new_radius - dist.length() > 0. {
+                    pos_not_ok = true;
+                }
+        }
+
+        let new_ball = Ball{
+            radius: new_radius,
+            mass:new_mass,
+            position: new_pos,
+            speed: Vec2::ZERO,
+            friction_coeff: new_friction_coeff,
+            letypedelaboule: BallType::Enemy(EnemyData {price: (new_mass * 100.) as u32}),
+        };
+        self.balls.push(RefCell::new(new_ball));
+    }
+
+    }
+
+    fn add_ball(&mut self, position: Vec2, radius: f32, mass: f32, friction_coeff: f32, letypedelaboule: entity::BallType) {
         let new_ball = entity::Ball {
             position,
             radius,
             mass,
             speed: Vec2::ZERO,
             friction_coeff,
-            letypedelaboule: entity::BallType::Player,
+            letypedelaboule,
         };
         self.balls.push(RefCell::new(new_ball));
     }
@@ -158,10 +195,7 @@ impl World {
         let overlap = ball_a.radius + ball_b.radius - dist.length();
 
         if overlap > 0. {
-            if ball_a.letypedelaboule == BallType::Player
-                && ball_b.letypedelaboule == BallType::Player
-            {
-                console::log("oui");
+            if ball_a.letypedelaboule==BallType::Player && ball_b.letypedelaboule==BallType::Player {
                 let tot_mass = ball_a.mass + ball_b.mass;
                 let new_ball = entity::Ball {
                     mass: tot_mass,
@@ -181,8 +215,8 @@ impl World {
                 return Some((smaller, bigger, new_ball));
             } else {
                 let push = dist.normalize_or_zero() * overlap * COLLISION_SMOOTHNESS;
-                ball_a.speed = ball_a.speed + push * ball_a.mass / ball_b.mass;
-                ball_b.speed = ball_b.speed - push * ball_b.mass / ball_a.mass;
+                ball_a.speed = ball_a.speed + push * ball_b.mass / ball_a.mass;
+                ball_b.speed = ball_b.speed - push * ball_a.mass / ball_b.mass;
             }
         }
         None

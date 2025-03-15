@@ -1,3 +1,4 @@
+use entity::Ball;
 use entity::BallType;
 use glam::Mat3;
 use glam::Vec2;
@@ -28,6 +29,7 @@ fn game_tick(game: &mut Game) {
     if game.state == GameState::Running {
         if !game.world.tick() {
             game.state = GameState::Playing;
+            game.world.spawn_round();
         }
     }
 }
@@ -93,7 +95,7 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &Resources) {
             ball.borrow().position,
             ball.borrow().radius,
             64,
-            color::rgb(1., 0.5, 0.5),
+            if let BallType::Enemy(_) = ball.borrow().letypedelaboule { color::rgb(1., 0.5, 0.5)} else {color::rgb(0.098, 0.76, 0.01)} ,
             &canvas.white_texture(),
         );
     }
@@ -170,8 +172,7 @@ async fn async_main() {
         state: GameState::Playing,
         selected: None,
     };
-
-    game.world.add_ball(Vec2::new(0.2, 0.5), 0.025, 1., 0.9995);
+    game.world.spawn_round();
 
     let mut tick_scheduler = TickScheduler::new(Duration::from_millis(1));
 
