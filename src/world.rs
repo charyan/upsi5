@@ -2,7 +2,7 @@ use std::{cell::RefCell, collections::BTreeMap};
 
 use crate::entity::{self, Ball, BallType, EnemyData};
 use glam::Vec2;
-use marmalade::{console, rand};
+use marmalade::rand;
 
 const COLLISION_SMOOTHNESS: f32 = 0.03;
 const COIN_RADIUS: f32 = 0.01;
@@ -105,9 +105,14 @@ impl World {
     }
 
     pub fn spawn_round(&mut self) {
+        self.spawn_coins();
+
         for ball in &mut self.balls {
             if let BallType::Enemy(enemy_data) = &mut ball.borrow_mut().letypedelaboule {
                 enemy_data.timer -= 1;
+                if enemy_data.timer < 1 {
+                    self.game_over = true
+                }
             }
             ball.borrow_mut().speed = Vec2::ZERO;
         }
@@ -202,18 +207,13 @@ impl World {
         }
 
         let mut player_ball = false;
-        let mut counter_ball_low = false;
 
         for ball in &self.balls {
-            if let BallType::Enemy(enemy_data) = ball.borrow().letypedelaboule {
-                if enemy_data.timer < 1 {
-                    counter_ball_low = true
-                }
-            } else {
+            if ball.borrow().letypedelaboule == BallType::Player {
                 player_ball = true;
             }
         }
-        self.game_over |= !player_ball | counter_ball_low;
+        self.game_over |= !player_ball;
 
         false
     }
