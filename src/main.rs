@@ -1,6 +1,7 @@
 use entity::BallType;
 use glam::Mat3;
 use glam::Vec2;
+use marmalade::audio;
 use marmalade::dom_stack;
 use marmalade::draw_scheduler;
 use marmalade::input;
@@ -15,6 +16,7 @@ use resources::Resources;
 use std::collections::BTreeMap;
 use std::mem;
 use std::time::Duration;
+use world::Sounds;
 use world::WORLD_DIM;
 use world::World;
 
@@ -30,7 +32,7 @@ const PRICE_AIM_ASSIST: [u32; 5] = [500, 1500, 3000, 5000, 10000];
 const PRICE_PROFITABILITY: [u32; 5] = [500, 1500, 3000, 5000, 10000];
 const PRICE_SLIDING: [u32; 5] = [500, 1500, 3000, 5000, 10000];
 
-fn game_tick(game: &mut Game) {
+fn game_tick(game: &mut Game, resources: &mut Resources) {
     if game.state == GameState::Running {
         let (run, sounds) = game.world.tick();
         if !run {
@@ -40,6 +42,17 @@ fn game_tick(game: &mut Game) {
         if game.world.is_game_over() {
             game.state = GameState::GameOver;
             game.total_money += game.world.money;
+        }
+        for sound in sounds {
+            match sound {
+                Sounds::SlimeSlime => {
+                    audio::play(&resources.sounds_slimeslime, 1.);
+                }
+                Sounds::Coin => {
+                    audio::play(&resources.sounds_coin, 1.);
+                }
+                _ => {}
+            }
         }
     }
 }
@@ -187,6 +200,7 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             }
             if input::is_key_pressed(Key::Space) {
                 game.state = GameState::Running;
+                audio::play(&resources.sounds_shot, 1.);
 
                 let moves = mem::replace(&mut game.moves, BTreeMap::new());
 
@@ -209,7 +223,7 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             }
         }
         GameState::Shopping => {
-            canvas.camera_view(table_size / 2. - Vec2::splat(BORDER_SIZE), 1.);
+            canvas.camera_view(table_size / 2., table_size.x / 2.);
 
             canvas.draw_rect(
                 Vec2::new(0.5, 0.5),
@@ -266,7 +280,7 @@ async fn async_main() {
     let mut tick_scheduler: TickScheduler = TickScheduler::new(Duration::from_millis(1));
     draw_scheduler::set_on_draw(move || {
         for _ in 0..tick_scheduler.tick_count() {
-            game_tick(&mut game);
+            game_tick(&mut game, &mut resources);
         }
 
         render_tick(&mut canvas, &mut game, &mut resources);

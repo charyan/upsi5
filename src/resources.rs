@@ -1,4 +1,5 @@
 use marmalade::{
+    audio,
     font::{self, Font},
     image,
     render::canvas2d::{Canvas2d, TextureRect},
@@ -11,6 +12,9 @@ pub struct Resources {
     pub aimcircle: TextureRect,
     pub coin: TextureRect,
     pub font: Font,
+    pub sounds_slimeslime: audio::Audio,
+    pub sounds_coin: audio::Audio,
+    pub sounds_shot: audio::Audio,
 }
 
 async fn load_texture(canvas: &mut Canvas2d, bytes: &[u8]) -> TextureRect {
@@ -33,6 +37,11 @@ impl Resources {
 
         let font = font::from_bytes(font::MONOGRAM);
 
+        let sounds_slimeslime =
+            audio::from_bytes(include_bytes!("../sounds/slimeslime.flac")).await;
+        let sounds_coin = audio::from_bytes(include_bytes!("../sounds/takecoin.flac")).await;
+        let sounds_shot = audio::from_bytes(include_bytes!("../sounds/shoot.flac")).await;
+
         Self {
             pool_table,
             slimeball,
@@ -40,6 +49,9 @@ impl Resources {
             aimcircle,
             coin,
             font,
+            sounds_coin,
+            sounds_shot,
+            sounds_slimeslime,
         }
     }
 }
