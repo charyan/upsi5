@@ -1,5 +1,5 @@
 use marmalade::{
-    audio,
+    audio::{self, Audio},
     font::{self, Font},
     image,
     render::canvas2d::{Canvas2d, TextureRect},
@@ -11,6 +11,7 @@ pub struct Resources {
     pub balls: [TextureRect; 6],
     pub aimcircle: TextureRect,
     pub coin: TextureRect,
+    pub coin_flat: TextureRect,
     pub speed_upgrade: TextureRect,
     pub slide_upgrade: TextureRect,
     pub heavy_upgrade: TextureRect,
@@ -18,13 +19,14 @@ pub struct Resources {
     pub aim_upgrade: TextureRect,
     pub button: TextureRect,
     pub font: Font,
-    pub sounds_slimeslime: audio::Audio,
-    pub sounds_coin: audio::Audio,
-    pub sounds_shot: audio::Audio,
-    pub sounds_border: audio::Audio,
-    pub sounds_enemyenemy: audio::Audio,
-    pub sounds_slimeenemy: audio::Audio,
-    pub sounds_button: audio::Audio,
+    pub sounds_slimeslime: Audio,
+    pub sounds_coin: Audio,
+    pub sounds_shot: Audio,
+    pub sounds_border: Audio,
+    pub sounds_enemyenemy: Audio,
+    pub sounds_slimeenemy: Audio,
+    pub sounds_button: Audio,
+    pub main_theme: Audio,
 }
 
 async fn load_texture(canvas: &mut Canvas2d, bytes: &[u8]) -> TextureRect {
@@ -44,6 +46,7 @@ impl Resources {
         let ball5 = load_texture(canvas, include_bytes!("../assets/ball5.png")).await;
         let aimcircle = load_texture(canvas, include_bytes!("../assets/aimcircle.png")).await;
         let coin: TextureRect = load_texture(canvas, include_bytes!("../assets/coin.png")).await;
+        let coin_flat = load_texture(canvas, include_bytes!("../assets/coinflat.png")).await;
         let speed_upgrade =
             load_texture(canvas, include_bytes!("../assets/speedupgrade.png")).await;
         let slide_upgrade =
@@ -66,6 +69,7 @@ impl Resources {
         let sounds_slimeenemy =
             audio::from_bytes(include_bytes!("../sounds/slimeenemy.flac")).await;
         let sounds_button = audio::from_bytes(include_bytes!("../sounds/button.flac")).await;
+        let main_theme = audio::from_bytes(include_bytes!("../sounds/sebastien.mp3")).await;
 
         Self {
             pool_table,
@@ -73,6 +77,7 @@ impl Resources {
             balls: [endball, ball1, ball2, ball3, ball4, ball5],
             aimcircle,
             coin,
+            coin_flat,
             font,
             sounds_coin,
             sounds_shot,
@@ -87,6 +92,7 @@ impl Resources {
             sounds_enemyenemy,
             sounds_slimeenemy,
             sounds_button,
+            main_theme,
         }
     }
 }

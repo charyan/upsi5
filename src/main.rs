@@ -174,6 +174,22 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
     );
 
     canvas.draw_rect(
+        Vec2::new(0.05, 1.20),
+        Vec2::new(0.1, 0.1),
+        color::WHITE,
+        &resources.coin_flat,
+    );
+
+    canvas.draw_text(
+        Vec2::new(0.175, 1.225),
+        0.1,
+        &format!("{}", game.world.money + game.total_money),
+        &mut resources.font,
+        color::WHITE,
+        &canvas.white_texture(),
+    );
+
+    canvas.draw_rect(
         Vec2::new(0., 0.),
         table_size,
         color::WHITE,
@@ -360,7 +376,7 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             canvas.draw_text(
                 WORLD_DIM / 2. - Vec2::new(0.37, 0.),
                 0.4,
-                "SPOOL",
+                "SPooL",
                 &mut resources.font,
                 TEXT_COLOR,
                 &canvas.white_texture(),
@@ -457,7 +473,7 @@ fn draw_upgrade(
 }
 
 async fn async_main() {
-    dom_stack::set_title("Slime Pool");
+    dom_stack::set_title("SPooL");
 
     let main_canvas = dom_stack::create_full_screen_canvas();
 
@@ -466,6 +482,8 @@ async fn async_main() {
     let mut canvas = Canvas2d::new(&main_canvas);
 
     let mut resources = Resources::load(&mut canvas).await;
+
+    audio::play_loop(&resources.main_theme, 0.5);
 
     let mut game = Game {
         moves: BTreeMap::new(),
@@ -479,7 +497,8 @@ async fn async_main() {
         sliding_level: 0,
         total_money: 0,
     };
-    let mut tick_scheduler: TickScheduler = TickScheduler::new(Duration::from_millis(1));
+
+    let mut tick_scheduler = TickScheduler::new(Duration::from_millis(1));
     draw_scheduler::set_on_draw(move || {
         for _ in 0..tick_scheduler.tick_count() {
             game_tick(&mut game, &mut resources);
