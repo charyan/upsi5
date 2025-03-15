@@ -81,13 +81,20 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &Resources) {
 
     canvas.clear(color::rgb(0., 0., 0.));
 
-    canvas.camera_view(WORLD_DIM / 2., WORLD_DIM.x / 2.);
+    let table_size: Vec2 = WORLD_DIM + Vec2::splat(BORDER_SIZE * 2.);
+
+    canvas.camera_view(table_size / 2., table_size.x / 2.);
 
     canvas.draw_rect(
         Vec2::new(0., 0.),
-        WORLD_DIM,
+        table_size,
         color::WHITE,
         &resources.pool_table,
+    );
+
+    canvas.camera_view(
+        table_size / 2. - Vec2::splat(BORDER_SIZE),
+        table_size.x / 2.,
     );
 
     for ball in &game.world.balls {

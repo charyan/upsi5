@@ -543,7 +543,7 @@ impl Canvas2d {
     pub fn camera_view(&mut self, cam_pos: Vec2, view_radius: f32) {
         let height_factor = self.canvas.width() as f32 / self.canvas.height() as f32;
 
-        self.view_matrix = Mat3::from_cols(
+        self.set_view_matrix(Mat3::from_cols(
             Vec3::new(1. / view_radius, 0., 0.),
             Vec3::new(0., height_factor / view_radius, 0.),
             Vec3::new(
@@ -551,7 +551,7 @@ impl Canvas2d {
                 -height_factor * cam_pos.y / view_radius,
                 1.,
             ),
-        );
+        ));
     }
 
     /// Computes the world coordinates corresponding to the given screen coordinates with the current view matrix
