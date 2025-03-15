@@ -54,7 +54,7 @@ impl Resources {
         let aim_upgrade = load_texture(canvas, include_bytes!("../assets/aimupgrade.png")).await;
         let button = load_texture(canvas, include_bytes!("../assets/button.png")).await;
 
-        let font = font::from_bytes(font::MONOGRAM);
+        let font = font::from_bytes(include_bytes!("../assets/modak.ttf"));
 
         let sounds_slimeslime =
             audio::from_bytes(include_bytes!("../sounds/slimeslime.flac")).await;

@@ -1,6 +1,7 @@
 use entity::BallType;
 use glam::Mat3;
 use glam::Vec2;
+use glam::Vec4;
 use marmalade::audio;
 use marmalade::dom_stack;
 use marmalade::draw_scheduler;
@@ -37,6 +38,8 @@ const ICON_SPACE: Vec2 = Vec2::splat(ICON_SIZE.x + 0.15);
 const BUTTON_SIZE: Vec2 = Vec2::new(0.2, 0.06);
 const BUTTON_SPACE: f32 = 0.1;
 const BUTTON_FONT_SIZE: f32 = 0.04;
+
+const TEXT_COLOR: Vec4 = color::WHITE;
 
 const ASPECT_RATIO: f32 = 4. / 3.;
 
@@ -235,11 +238,20 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
         GameState::GameOver => {
             draw_game(canvas, game, resources);
             canvas.draw_text(
-                Vec2::new(0.1, 0.3),
+                WORLD_DIM / 2. - Vec2::new(0.65, 0.),
                 0.4,
                 "Game Over",
                 &mut resources.font,
-                color::WHITE,
+                TEXT_COLOR,
+                &canvas.white_texture(),
+            );
+
+            canvas.draw_text(
+                Vec2::new(WORLD_DIM.x / 2. - 0.4, 0.35),
+                0.1,
+                "Press space to continue.",
+                &mut resources.font,
+                TEXT_COLOR,
                 &canvas.white_texture(),
             );
 
@@ -320,11 +332,11 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             );
 
             canvas.draw_text(
-                Vec2::new(0.2, 0.3),
+                Vec2::new(0.4, 0.3),
                 0.1,
-                "Press space to quit once you are done.",
+                "Press space to restart once you are done.",
                 &mut resources.font,
-                color::rgb(1., 1., 1.),
+                TEXT_COLOR,
                 &canvas.white_texture(),
             );
 
@@ -339,12 +351,27 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             }
         }
         GameState::Menu => {
+            canvas.camera_view_ratio(
+                table_size / 2. + Vec2::new(0., (table_size.x / ASPECT_RATIO - table_size.y) / 2.),
+                table_size.x / 2.,
+                ASPECT_RATIO,
+            );
+
             canvas.draw_text(
-                Vec2::new(0.1, 0.3),
+                WORLD_DIM / 2. - Vec2::new(0.37, 0.),
                 0.4,
                 "SPOOL",
                 &mut resources.font,
-                color::WHITE,
+                TEXT_COLOR,
+                &canvas.white_texture(),
+            );
+
+            canvas.draw_text(
+                Vec2::new(WORLD_DIM.x / 2. - 0.3, 0.35),
+                0.1,
+                "Press space to start.",
+                &mut resources.font,
+                TEXT_COLOR,
                 &canvas.white_texture(),
             );
 
@@ -446,11 +473,11 @@ async fn async_main() {
         state: GameState::Menu,
         selected: None,
         aim_assist_level: 0,
-        max_speed_level: 4,
+        max_speed_level: 0,
         profitability_level: 0,
         start_mass_level: 0,
         sliding_level: 0,
-        total_money: 1000,
+        total_money: 0,
     };
     let mut tick_scheduler: TickScheduler = TickScheduler::new(Duration::from_millis(1));
     draw_scheduler::set_on_draw(move || {

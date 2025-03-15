@@ -254,7 +254,7 @@ impl World {
 
         for ball in &self.balls {
             let ball = ball.borrow();
-            if ball.speed.length() > 0.00001 {
+            if ball.speed.length() > 0.00003 {
                 return (true, sounds);
             }
         }
