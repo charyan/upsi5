@@ -61,7 +61,7 @@ impl World {
 
     pub fn spawn_round(&mut self) {
         for ball in &mut self.balls {
-            if let BallType::Enemy(mut enemy_data) = ball.borrow_mut().letypedelaboule {
+            if let BallType::Enemy(enemy_data) = &mut ball.borrow_mut().letypedelaboule {
                 enemy_data.timer -= 1;
             }
             ball.borrow_mut().speed = Vec2::ZERO;
