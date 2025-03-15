@@ -1,4 +1,6 @@
 use entity::BallType;
+use glam::Affine2;
+use glam::Mat3;
 use glam::Vec2;
 use marmalade::dom_stack;
 use marmalade::draw_scheduler;
@@ -46,6 +48,29 @@ struct Game {
     selected: Option<usize>,
 }
 
+fn draw_line(canvas: &mut Canvas2d, position: Vec2, length: Vec2, width: f32) {
+    let angle = (-length).to_angle();
+
+    let line = length.length();
+
+    let previous = canvas.get_view_matrix();
+
+    let m1 = Mat3::from_translation(position);
+    let m2 = Mat3::from_rotation_z(angle);
+    let m3 = Mat3::from_translation(-position);
+
+    canvas.set_view_matrix(previous * m1 * m2 * m3);
+
+    canvas.draw_rect(
+        position - Vec2::new(0., width / 2.),
+        Vec2::new(line, width),
+        color::WHITE,
+        &canvas.white_texture(),
+    );
+
+    canvas.set_view_matrix(previous);
+}
+
 fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &Resources) {
     canvas.fit_screen();
 
@@ -73,29 +98,43 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &Resources) {
     }
 
     if game.state == GameState::Playing {
+        for (i, b) in game.world.balls.iter().enumerate() {
+            if let Some(&m) = game.moves.get(&i) {
+                let b = b.borrow();
+
+                draw_line(canvas, b.position, m / 0.01, 0.005);
+            }
+        }
+
         if input::is_button_pressed(Button::Left) {
             let mouse_pos = input::mouse_position().as_vec2();
 
             for (i, b) in game.world.balls.iter().enumerate() {
                 let b = b.borrow();
 
-                if let BallType::Player = b.letypedelaboule {}
-
-                if b.position.distance(canvas.screen_to_world_pos(mouse_pos)) < b.radius {
-                    game.selected = Some(i);
+                if let BallType::Player = b.letypedelaboule {
+                    if b.position.distance(canvas.screen_to_world_pos(mouse_pos)) < b.radius {
+                        game.selected = Some(i);
+                    }
                 }
             }
         }
         if let Some(selected) = game.selected {
+            let move_vector = (canvas.screen_to_world_pos(input::mouse_position().as_vec2())
+                - game.world.balls[selected].borrow().position)
+                * 0.01;
+
             if !input::is_button_down(Button::Left) {
-                game.moves.insert(
-                    selected,
-                    (canvas.screen_to_world_pos(input::mouse_position().as_vec2())
-                        - game.world.balls[selected].borrow().position)
-                        * 0.01,
-                );
+                game.moves.insert(selected, move_vector);
                 game.selected = None;
             }
+
+            draw_line(
+                canvas,
+                game.world.balls[selected].borrow().position,
+                move_vector / 0.01,
+                0.01,
+            );
         }
         if input::is_key_pressed(Key::Space) {
             game.state = GameState::Running;

@@ -525,6 +525,10 @@ impl Canvas2d {
         self.view_matrix = view_matrix;
     }
 
+    pub fn get_view_matrix(&mut self) -> Mat3 {
+        self.view_matrix
+    }
+
     /// Set the view matrix so that world coordinates corresponds to pixels on the canvas
     pub fn pixel_perfect_view(&mut self) {
         self.view_matrix = Mat3::from_cols(
