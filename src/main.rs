@@ -207,6 +207,9 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
                 game.world.launch_round(moves);
             }
         }
+        GameState::Running => {
+            draw_game(canvas, game, resources);
+        }
         GameState::GameOver => {
             draw_game(canvas, game, resources);
             canvas.draw_text(
@@ -245,9 +248,6 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             if input::is_key_pressed(Key::Space) {
                 game.state = GameState::Playing
             }
-        }
-        GameState::Running => {
-            draw_game(canvas, game, resources);
         }
     }
 
