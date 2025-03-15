@@ -21,6 +21,10 @@ pub struct Resources {
     pub sounds_slimeslime: audio::Audio,
     pub sounds_coin: audio::Audio,
     pub sounds_shot: audio::Audio,
+    pub sounds_border: audio::Audio,
+    pub sounds_enemyenemy: audio::Audio,
+    pub sounds_slimeenemy: audio::Audio,
+    pub sounds_button: audio::Audio,
 }
 
 async fn load_texture(canvas: &mut Canvas2d, bytes: &[u8]) -> TextureRect {
@@ -56,6 +60,12 @@ impl Resources {
             audio::from_bytes(include_bytes!("../sounds/slimeslime.flac")).await;
         let sounds_coin = audio::from_bytes(include_bytes!("../sounds/takecoin.flac")).await;
         let sounds_shot = audio::from_bytes(include_bytes!("../sounds/shoot.flac")).await;
+        let sounds_border = audio::from_bytes(include_bytes!("../sounds/border.flac")).await;
+        let sounds_enemyenemy =
+            audio::from_bytes(include_bytes!("../sounds/enemyenemy.flac")).await;
+        let sounds_slimeenemy =
+            audio::from_bytes(include_bytes!("../sounds/slimeenemy.flac")).await;
+        let sounds_button = audio::from_bytes(include_bytes!("../sounds/button.flac")).await;
 
         Self {
             pool_table,
@@ -73,6 +83,10 @@ impl Resources {
             slide_upgrade,
             speed_upgrade,
             button,
+            sounds_border,
+            sounds_enemyenemy,
+            sounds_slimeenemy,
+            sounds_button,
         }
     }
 }

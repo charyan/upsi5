@@ -37,6 +37,9 @@ const ENEMY_MASS: f32 = 0.15;
 pub enum Sounds {
     SlimeSlime,
     Coin,
+    SlimeEnemy,
+    EnemyEnemy,
+    Border,
 }
 
 pub struct World {
@@ -212,7 +215,7 @@ impl World {
                 let mut ball = ball_cell.borrow_mut();
                 ball.position = ball.position + ball.speed;
                 ball.speed = ball.speed * ball.friction_coeff;
-                Self::check_border(&mut ball);
+                Self::check_border(&mut ball, &mut sounds);
                 if self.in_hole(&ball) {
                     trash.push(index);
                 }
@@ -227,10 +230,12 @@ impl World {
 
             for (coin_index, coin) in self.coins.iter().enumerate() {
                 let ball = ball_cell.borrow();
-                if ball.radius + COIN_RADIUS - (ball.position - coin).length() > 0. {
-                    coin_trash.push(coin_index);
-                    sounds.insert(Sounds::Coin);
-                    self.money += COIN_PRICE * PROFITABILITY_SCALING[self.profitability_level];
+                if ball.letypedelaboule == BallType::Player {
+                    if ball.radius + COIN_RADIUS - (ball.position - coin).length() > 0. {
+                        coin_trash.push(coin_index);
+                        sounds.insert(Sounds::Coin);
+                        self.money += COIN_PRICE * PROFITABILITY_SCALING[self.profitability_level];
+                    }
                 }
             }
         }
@@ -307,21 +312,25 @@ impl World {
         self.balls.extend(new_balls);
     }
 
-    fn check_border(ball: &mut entity::Ball) {
+    fn check_border(ball: &mut entity::Ball, sounds: &mut BTreeSet<Sounds>) {
         if ball.position.x - ball.radius < 0. {
             ball.position.x = ball.radius;
             ball.speed.x = -ball.speed.x;
+            sounds.insert(Sounds::Border);
         } else if ball.position.x + ball.radius > WORLD_DIM.x {
             ball.position.x = WORLD_DIM.x - ball.radius;
             ball.speed.x = -ball.speed.x;
+            sounds.insert(Sounds::Border);
         }
 
         if ball.position.y - ball.radius < 0. {
             ball.position.y = ball.radius;
             ball.speed.y = -ball.speed.y;
+            sounds.insert(Sounds::Border);
         } else if ball.position.y + ball.radius > WORLD_DIM.y {
             ball.position.y = WORLD_DIM.y - ball.radius;
             ball.speed.y = -ball.speed.y;
+            sounds.insert(Sounds::Border);
         }
     }
 
@@ -365,6 +374,11 @@ impl World {
                 let push = dist.normalize_or_zero() * overlap * COLLISION_SMOOTHNESS;
                 ball_a.speed = ball_a.speed + push * ball_b.mass / ball_a.mass;
                 ball_b.speed = ball_b.speed - push * ball_a.mass / ball_b.mass;
+                if ball_a.letypedelaboule == ball_b.letypedelaboule {
+                    sounds.insert(Sounds::EnemyEnemy);
+                } else {
+                    sounds.insert(Sounds::SlimeEnemy);
+                }
             }
         }
         None

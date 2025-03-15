@@ -1,7 +1,6 @@
 use entity::BallType;
 use glam::Mat3;
 use glam::Vec2;
-use glam::Vec4;
 use marmalade::audio;
 use marmalade::dom_stack;
 use marmalade::draw_scheduler;
@@ -60,7 +59,15 @@ fn game_tick(game: &mut Game, resources: &mut Resources) {
                 Sounds::Coin => {
                     audio::play(&resources.sounds_coin, 1.);
                 }
-                _ => {}
+                Sounds::Border => {
+                    audio::play(&resources.sounds_border, 1.);
+                }
+                Sounds::EnemyEnemy => {
+                    audio::play(&resources.sounds_enemyenemy, 1.);
+                }
+                Sounds::SlimeEnemy => {
+                    audio::play(&resources.sounds_slimeenemy, 1.);
+                }
             }
         }
     }
@@ -397,7 +404,8 @@ fn draw_upgrade(
             && *total_money > price[*level]
         {
             *total_money -= price[*level];
-            *level += 1
+            *level += 1;
+            audio::play(&resources.sounds_button, 1.);
         }
     }
 }
