@@ -41,7 +41,7 @@ const BUTTON_FONT_SIZE: f32 = 0.04;
 
 const TEXT_COLOR: Vec4 = color::WHITE;
 
-const ASPECT_RATIO: f32 = 4. / 3.;
+const ASPECT_RATIO: f32 = 1.5;
 
 fn game_tick(game: &mut Game, resources: &mut Resources) {
     if game.state == GameState::Running {
