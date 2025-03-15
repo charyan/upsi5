@@ -2,7 +2,7 @@ use std::{cell::RefCell, collections::BTreeMap};
 
 use crate::entity::{self, Ball, BallType, EnemyData};
 use glam::Vec2;
-use marmalade::rand;
+use marmalade::{console, rand};
 
 const COLLISION_SMOOTHNESS: f32 = 0.03;
 
@@ -18,9 +18,11 @@ const HOLES: [Vec2; 6] = [
 ];
 const MAX_POS_TRY: i32 = 100;
 
-const MAX_SPEED_SCALING: [f32; 5] = [0.003, 0.006, 0.015, 0.03, 0.075];
+const MAX_SPEED_SCALING: [f32; 5] = [0.005, 0.01, 0.02, 0.03, 0.04];
 const START_MASS_SCALING: [f32; 5] = [0.1, 0.5, 1., 1.5, 3.];
 const PROFITABILITY_SCALING: [u32; 5] = [1, 2, 5, 10, 25];
+const SLIDING_SCALING: [f32; 5] = [0.9994, 0.99945, 0.9995, 0.99955, 0.9996];
+
 pub struct World {
     pub balls: Vec<RefCell<entity::Ball>>,
     pub money: u32,
@@ -28,6 +30,7 @@ pub struct World {
     game_over: bool,
     max_speed_level: usize,
     profitability_level: usize,
+    sliding_level: usize,
 }
 
 impl World {
@@ -35,6 +38,7 @@ impl World {
         max_speed_level: usize,
         profitability_level: usize,
         start_mass_level: usize,
+        sliding_level: usize,
     ) -> Self {
         let mut new_world = World {
             balls: vec![],
@@ -43,12 +47,13 @@ impl World {
             game_over: false,
             max_speed_level,
             profitability_level,
+            sliding_level,
         };
         new_world.add_ball(
             Vec2::new(WORLD_DIM.x / 4., WORLD_DIM.y / 2.),
             START_MASS_SCALING[start_mass_level] / 4.,
             START_MASS_SCALING[start_mass_level],
-            0.9995,
+            SLIDING_SCALING[sliding_level],
             entity::BallType::Player,
         );
         new_world
@@ -59,6 +64,7 @@ impl World {
             if let BallType::Enemy(mut enemy_data) = ball.borrow_mut().letypedelaboule {
                 enemy_data.timer -= 1;
             }
+            ball.borrow_mut().speed = Vec2::ZERO;
         }
 
         let new_mass = self.round as f32 * 0.05;
@@ -69,7 +75,7 @@ impl World {
         let y1 = HOLE_RADIUS + new_radius;
         let y2 = WORLD_DIM.y - HOLE_RADIUS - new_radius;
 
-        let new_friction_coeff = 0.9995;
+        let new_friction_coeff = SLIDING_SCALING[self.sliding_level];
         let mut pos_not_ok = true;
         let mut new_pos = Vec2::ZERO;
         let mut count = 0;

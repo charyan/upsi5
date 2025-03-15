@@ -19,8 +19,8 @@ use world::WORLD_DIM;
 use world::World;
 
 mod entity;
+mod level;
 mod resources;
-mod upgrade;
 mod world;
 
 const BORDER_SIZE: f32 = 0.068;
@@ -29,6 +29,7 @@ const PRICE_MAX_SPEED: [u32; 5] = [500, 1500, 3000, 5000, 10000];
 const PRICE_START_MASS: [u32; 5] = [500, 1500, 3000, 5000, 10000];
 const PRICE_AIM_ASSIST: [u32; 5] = [500, 1500, 3000, 5000, 10000];
 const PRICE_PROFITABILITY: [u32; 5] = [500, 1500, 3000, 5000, 10000];
+const PRICE_SLIDING: [u32; 5] = [500, 1500, 3000, 5000, 10000];
 
 fn game_tick(game: &mut Game) {
     if game.state == GameState::Running {
@@ -61,6 +62,7 @@ struct Game {
     start_mass_level: usize,
     aim_assist_level: usize,
     profitability_level: usize,
+    sliding_level: usize,
 }
 
 fn draw_line(canvas: &mut Canvas2d, position: Vec2, length: Vec2, width: f32) {
@@ -199,13 +201,14 @@ async fn async_main() {
 
     let mut game = Game {
         moves: BTreeMap::new(),
-        world: World::new(0, 0, 0),
+        world: World::new(0, 0, 0, 4),
         state: GameState::Playing,
         selected: None,
         aim_assist_level: 0,
         max_speed_level: 4,
         profitability_level: 0,
         start_mass_level: 0,
+        sliding_level: 0,
         total_money: 0,
     };
     game.world.spawn_round();
