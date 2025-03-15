@@ -138,7 +138,7 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &Resources) {
             if let Some(&m) = game.moves.get(&i) {
                 let b = b.borrow();
 
-                draw_line(canvas, b.position, m / 0.01, 0.005);
+                draw_line(canvas, b.position, m, 0.005);
             }
         }
 
@@ -156,21 +156,23 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &Resources) {
             }
         }
         if let Some(selected) = game.selected {
-            let move_vector = (canvas.screen_to_world_pos(input::mouse_position().as_vec2())
-                - game.world.balls[selected].borrow().position)
-                * 0.01;
+            let mut move_vector = canvas.screen_to_world_pos(input::mouse_position().as_vec2())
+                - game.world.balls[selected].borrow().position;
+
+            if move_vector.length() > 0.15 {
+                move_vector *= 0.15 / move_vector.length();
+            }
 
             if !input::is_button_down(Button::Left) {
                 game.moves.insert(selected, move_vector);
                 game.selected = None;
             }
 
-            draw_line(
-                canvas,
-                game.world.balls[selected].borrow().position,
-                move_vector / 0.01,
-                0.01,
-            );
+            let ball_pos = game.world.balls[selected].borrow().position;
+
+            draw_ball(canvas, ball_pos, 0.15, &resources.aimcircle);
+
+            draw_line(canvas, ball_pos, move_vector, 0.01);
         }
         if input::is_key_pressed(Key::Space) {
             game.state = GameState::Running;

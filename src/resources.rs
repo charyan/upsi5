@@ -7,6 +7,7 @@ pub struct Resources {
     pub pool_table: TextureRect,
     pub slimeball: TextureRect,
     pub ball1: TextureRect,
+    pub aimcircle: TextureRect,
 }
 
 async fn load_texture(canvas: &mut Canvas2d, bytes: &[u8]) -> TextureRect {
@@ -18,11 +19,13 @@ impl Resources {
         let pool_table = load_texture(canvas, include_bytes!("../assets/pool_table.png")).await;
         let slimeball = load_texture(canvas, include_bytes!("../assets/slimeball.png")).await;
         let ball1 = load_texture(canvas, include_bytes!("../assets/ball1.png")).await;
+        let aimcircle = load_texture(canvas, include_bytes!("../assets/aimcircle.png")).await;
 
         Self {
             pool_table,
             slimeball,
             ball1,
+            aimcircle,
         }
     }
 }
