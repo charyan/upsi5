@@ -7,7 +7,7 @@ thread_local! {
     static CONTEXT: AudioContext = AudioContext::new().unwrap();
 }
 
-type Audio = AudioBuffer;
+pub type Audio = AudioBuffer;
 
 pub async fn from_bytes(bytes: &[u8]) -> Audio {
     JsFuture::from(CONTEXT.with(|c| {
