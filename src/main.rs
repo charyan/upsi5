@@ -29,7 +29,7 @@ const BORDER_SIZE: f32 = 0.068;
 
 const PRICE_MAX_SPEED: [u32; 4] = [500, 1500, 3000, 5000];
 const PRICE_START_MASS: [u32; 4] = [500, 1500, 3000, 5000];
-const PRICE_AIM_ASSIST: [u32; 4] = [500, 1500, 3000, 5000];
+const PRICE_AIM_ASSIST: [u32; 2] = [500, 1500];
 const PRICE_PROFITABILITY: [u32; 4] = [500, 1500, 3000, 5000];
 const PRICE_SLIDING: [u32; 4] = [500, 1500, 3000, 5000];
 
@@ -404,21 +404,21 @@ fn draw_upgrade(
     canvas: &mut Canvas2d,
     position: Vec2,
     icon_texture: &TextureRect,
-    price: &[u32; 4],
+    price: &[u32],
     level: &mut usize,
     total_money: &mut u32,
     resources: &mut Resources,
     mouse_position: &Option<Vec2>,
 ) {
-    let color = if *level > 3 {
+    let color = if *level == price.len() {
         color::rgb(1., 1., 1.)
-    } else if price[*level] < *total_money {
+    } else if price[*level] <= *total_money {
         color::rgb(0., 1., 0.)
     } else {
         color::rgb(1., 0., 0.)
     };
 
-    let value = if *level < 4 {
+    let value = if *level < price.len() {
         format!("{}", price[*level])
     } else {
         "Max !".to_owned()
@@ -444,7 +444,7 @@ fn draw_upgrade(
         &canvas.white_texture(),
     );
 
-    for rect_level in 0..5 {
+    for rect_level in 0..price.len() + 1 {
         canvas.draw_rect(
             position + Vec2::new(-0.0325, rect_level as f32 * 0.0275 + 0.01),
             Vec2::splat(0.025),
@@ -487,11 +487,11 @@ async fn async_main() {
 
     let mut game = Game {
         moves: BTreeMap::new(),
-        world: World::new(0, 0, 0, 0),
+        world: World::new(4, 0, 0, 0),
         state: GameState::Menu,
         selected: None,
         aim_assist_level: 0,
-        max_speed_level: 0,
+        max_speed_level: 4,
         profitability_level: 0,
         start_mass_level: 0,
         sliding_level: 0,
