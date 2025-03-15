@@ -318,6 +318,25 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
                 resources,
                 &mouse_position,
             );
+
+            canvas.draw_text(
+                Vec2::new(0.2, 0.3),
+                0.1,
+                "Press space to quit once you are done.",
+                &mut resources.font,
+                color::rgb(1., 1., 1.),
+                &canvas.white_texture(),
+            );
+
+            if input::is_key_pressed(Key::Space) {
+                game.world = World::new(
+                    game.max_speed_level,
+                    game.profitability_level,
+                    game.start_mass_level,
+                    game.sliding_level,
+                );
+                game.state = GameState::Playing
+            }
         }
         GameState::Menu => {
             canvas.draw_text(
