@@ -2,7 +2,7 @@ use std::{cell::RefCell, collections::BTreeMap};
 
 use crate::entity::{self, Ball, BallType, EnemyData};
 use glam::Vec2;
-use marmalade::rand;
+use marmalade::{console, rand};
 
 const COLLISION_SMOOTHNESS: f32 = 0.03;
 pub const COIN_RADIUS: f32 = 0.01;
@@ -19,15 +19,21 @@ const HOLES: [Vec2; 6] = [
 ];
 const MAX_POS_TRY: i32 = 100;
 
-const MAX_SPEED_SCALING: [f32; 5] = [0.005, 0.01, 0.02, 0.03, 0.04];
-const START_MASS_SCALING: [f32; 5] = [0.1, 0.5, 1., 1.5, 3.];
+const MAX_SPEED_SCALING: [f32; 5] = [0.01, 0.01, 0.02, 0.03, 0.04];
+const START_MASS_SCALING: [f32; 5] = [0.3, 0.5, 1., 1.5, 3.];
 const PROFITABILITY_SCALING: [u32; 5] = [1, 2, 5, 10, 25];
 const SLIDING_SCALING: [f32; 5] = [0.9994, 0.99945, 0.9995, 0.99955, 0.9996];
+
+pub const ENEMY_ROUND: [usize; 20] = [1, 0, 1, 0, 1, 2, 1, 0, 3, 1, 0, 2, 0, 1, 2, 0, 1, 2, 3, 1];
+
+pub const PLAYER_START_SIZE: f32 = 0.05;
+pub const ENEMY_BALL_SIZE: f32 = 0.035;
+const ENEMY_MASS: f32 = 0.15;
 
 pub struct World {
     pub balls: Vec<RefCell<entity::Ball>>,
     pub money: u32,
-    pub round: u32,
+    pub round: usize,
     pub coins: Vec<Vec2>,
     game_over: bool,
     max_speed_level: usize,
@@ -45,7 +51,7 @@ impl World {
         let mut new_world = World {
             balls: Vec::new(),
             money: 0,
-            round: 1,
+            round: 0,
             game_over: false,
             max_speed_level,
             profitability_level,
@@ -54,10 +60,38 @@ impl World {
         };
         new_world.add_ball(
             Vec2::new(WORLD_DIM.x / 4., WORLD_DIM.y / 2.),
-            START_MASS_SCALING[start_mass_level] / 4.,
+            PLAYER_START_SIZE,
             START_MASS_SCALING[start_mass_level],
             SLIDING_SCALING[sliding_level],
             entity::BallType::Player,
+        );
+
+        new_world.add_ball(
+            Vec2::new(WORLD_DIM.x / 4. * 2.5, WORLD_DIM.y / 2.),
+            ENEMY_BALL_SIZE,
+            ENEMY_MASS,
+            SLIDING_SCALING[sliding_level],
+            entity::BallType::Enemy(EnemyData { timer: 5 }),
+        );
+        new_world.add_ball(
+            Vec2::new(
+                WORLD_DIM.x / 4. * 2.5 + ENEMY_BALL_SIZE * 3f32.sqrt(),
+                WORLD_DIM.y / 2. + ENEMY_BALL_SIZE,
+            ),
+            ENEMY_BALL_SIZE,
+            ENEMY_MASS,
+            SLIDING_SCALING[sliding_level],
+            entity::BallType::Enemy(EnemyData { timer: 5 }),
+        );
+        new_world.add_ball(
+            Vec2::new(
+                WORLD_DIM.x / 4. * 2.5 + ENEMY_BALL_SIZE * 3f32.sqrt(),
+                WORLD_DIM.y / 2. - ENEMY_BALL_SIZE,
+            ),
+            ENEMY_BALL_SIZE,
+            ENEMY_MASS,
+            SLIDING_SCALING[sliding_level],
+            entity::BallType::Enemy(EnemyData { timer: 5 }),
         );
         new_world
     }
@@ -67,6 +101,22 @@ impl World {
         for _ in 0..coin_number {
             let coin_pos = self.get_free_pos(COIN_RADIUS);
             self.coins.push(coin_pos);
+        }
+    }
+
+    fn spawn_enemies(&mut self) {
+        console::log(&format!("{}", ENEMY_ROUND[self.round]));
+        for _ in 0..ENEMY_ROUND[self.round] {
+            let new_friction_coeff = SLIDING_SCALING[self.sliding_level];
+            let new_pos = self.get_free_pos(ENEMY_BALL_SIZE);
+
+            self.add_ball(
+                new_pos,
+                ENEMY_BALL_SIZE,
+                ENEMY_MASS,
+                new_friction_coeff,
+                BallType::Enemy(EnemyData { timer: 5 }),
+            );
         }
     }
 
@@ -116,20 +166,8 @@ impl World {
             }
             ball.borrow_mut().speed = Vec2::ZERO;
         }
-
-        let new_mass = self.round as f32 * 0.05;
-        let new_radius = new_mass / 4.;
-
-        let new_friction_coeff = SLIDING_SCALING[self.sliding_level];
-        let new_pos = self.get_free_pos(new_radius);
-
-        self.add_ball(
-            new_pos,
-            new_radius,
-            new_mass,
-            new_friction_coeff,
-            BallType::Enemy(EnemyData { timer: 5 }),
-        );
+        self.spawn_enemies();
+        self.round += 1;
     }
 
     pub fn is_game_over(&self) -> bool {
@@ -257,7 +295,6 @@ impl World {
         }
 
         self.balls.extend(new_balls);
-        self.round += 1
     }
 
     fn check_border(ball: &mut entity::Ball) {

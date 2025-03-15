@@ -19,7 +19,6 @@ use world::WORLD_DIM;
 use world::World;
 
 mod entity;
-mod level;
 mod resources;
 mod world;
 
@@ -216,7 +215,7 @@ async fn async_main() {
 
     let mut game = Game {
         moves: BTreeMap::new(),
-        world: World::new(0, 0, 0, 4),
+        world: World::new(0, 0, 0, 0),
         state: GameState::Playing,
         selected: None,
         aim_assist_level: 0,
@@ -226,7 +225,6 @@ async fn async_main() {
         sliding_level: 0,
         total_money: 0,
     };
-    game.world.spawn_round();
 
     let mut tick_scheduler = TickScheduler::new(Duration::from_millis(1));
 
