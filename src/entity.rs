@@ -8,7 +8,6 @@ pub enum BallType {
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub struct EnemyData {
-    pub price: u32,
     pub timer: u32,
 }
 

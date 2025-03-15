@@ -5,7 +5,7 @@ use glam::Vec2;
 use marmalade::{console, rand};
 
 const COLLISION_SMOOTHNESS: f32 = 0.03;
-
+const COIN_RADIUS: f32 = 0.01;
 pub const WORLD_DIM: Vec2 = Vec2::new(1.926, 1.01);
 const HOLE_RADIUS: f32 = 0.038;
 const HOLES: [Vec2; 6] = [
@@ -27,6 +27,7 @@ pub struct World {
     pub balls: Vec<RefCell<entity::Ball>>,
     pub money: u32,
     pub round: u32,
+    coins: Vec<Vec2>,
     game_over: bool,
     max_speed_level: usize,
     profitability_level: usize,
@@ -41,13 +42,14 @@ impl World {
         sliding_level: usize,
     ) -> Self {
         let mut new_world = World {
-            balls: vec![],
+            balls: Vec::new(),
             money: 0,
             round: 1,
             game_over: false,
             max_speed_level,
             profitability_level,
             sliding_level,
+            coins: Vec::new(),
         };
         new_world.add_ball(
             Vec2::new(WORLD_DIM.x / 4., WORLD_DIM.y / 2.),
@@ -57,6 +59,47 @@ impl World {
             entity::BallType::Player,
         );
         new_world
+    }
+
+    fn spawn_coins(&mut self) {
+        let coin_number: usize = rand::rand_range(1., 5.) as usize;
+        for _ in 0..coin_number {
+            let coin_pos = self.get_free_pos(COIN_RADIUS);
+        }
+    }
+
+    fn get_free_pos(&mut self, radius: f32) -> Vec2 {
+        let x1 = HOLE_RADIUS + radius;
+        let x2 = WORLD_DIM.x - HOLE_RADIUS - radius;
+        let y1 = HOLE_RADIUS + radius;
+        let y2 = WORLD_DIM.y - HOLE_RADIUS - radius;
+
+        let mut pos_not_ok = true;
+        let mut count = 0;
+        let mut new_pos = Vec2::ZERO;
+
+        while pos_not_ok {
+            if count > MAX_POS_TRY {
+                self.game_over = true;
+                break;
+            }
+            new_pos = Vec2::new(
+                rand::rand_range(x1 as f64, x2 as f64) as f32,
+                rand::rand_range(y1 as f64, y2 as f64) as f32,
+            );
+            pos_not_ok = false;
+            for index in 0..self.balls.len() {
+                let ball = self.balls[index].borrow();
+
+                let dist = ball.position - new_pos;
+
+                if ball.radius + radius - dist.length() > 0. {
+                    pos_not_ok = true;
+                }
+            }
+            count += 1;
+        }
+        new_pos
     }
 
     pub fn spawn_round(&mut self) {
@@ -70,49 +113,16 @@ impl World {
         let new_mass = self.round as f32 * 0.05;
         let new_radius = new_mass / 4.;
 
-        let x1 = HOLE_RADIUS + new_radius;
-        let x2 = WORLD_DIM.x - HOLE_RADIUS - new_radius;
-        let y1 = HOLE_RADIUS + new_radius;
-        let y2 = WORLD_DIM.y - HOLE_RADIUS - new_radius;
-
         let new_friction_coeff = SLIDING_SCALING[self.sliding_level];
-        let mut pos_not_ok = true;
-        let mut new_pos = Vec2::ZERO;
-        let mut count = 0;
-        let mut loose = false;
+        let new_pos = self.get_free_pos(new_radius);
 
-        while pos_not_ok {
-            if count > MAX_POS_TRY {
-                loose = true;
-                break;
-            }
-            new_pos = Vec2::new(
-                rand::rand_range(x1 as f64, x2 as f64) as f32,
-                rand::rand_range(y1 as f64, y2 as f64) as f32,
-            );
-            pos_not_ok = false;
-            for index in 0..self.balls.len() {
-                let ball = self.balls[index].borrow();
-
-                let dist = ball.position - new_pos;
-
-                if ball.radius + new_radius - dist.length() > 0. {
-                    pos_not_ok = true;
-                }
-            }
-            count += 1;
-        }
         self.add_ball(
             new_pos,
             new_radius,
             new_mass,
             new_friction_coeff,
-            BallType::Enemy(EnemyData {
-                price: (new_mass * 100.) as u32,
-                timer: 5,
-            }),
+            BallType::Enemy(EnemyData { timer: 5 }),
         );
-        self.game_over |= loose;
     }
 
     pub fn is_game_over(&self) -> bool {
@@ -149,9 +159,6 @@ impl World {
                 Self::check_border(&mut ball);
                 if self.in_hole(&ball) {
                     trash.push(index);
-                    if let BallType::Enemy(enemy) = ball.letypedelaboule {
-                        self.money += enemy.price * PROFITABILITY_SCALING[self.profitability_level];
-                    }
                 }
             }
             for other_ball_index in index + 1..self.balls.len() {

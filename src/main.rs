@@ -35,12 +35,12 @@ fn game_tick(game: &mut Game) {
     if game.state == GameState::Running {
         if !game.world.tick() {
             game.state = GameState::Playing;
-            if game.world.is_game_over() {
-                game.state = GameState::Shopping;
-                game.total_money += game.world.money;
-            } else {
-                game.world.spawn_round();
-            }
+        }
+        if game.world.is_game_over() {
+            game.state = GameState::Shopping;
+            game.total_money += game.world.money;
+        } else {
+            game.world.spawn_round();
         }
     }
 }
