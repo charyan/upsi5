@@ -35,12 +35,11 @@ fn game_tick(game: &mut Game) {
     if game.state == GameState::Running {
         if !game.world.tick() {
             game.state = GameState::Playing;
+            game.world.spawn_round();
         }
         if game.world.is_game_over() {
-            game.state = GameState::Shopping;
+            game.state = GameState::GameOver;
             game.total_money += game.world.money;
-        } else {
-            game.world.spawn_round();
         }
     }
 }
@@ -49,6 +48,7 @@ fn game_tick(game: &mut Game) {
 enum GameState {
     Running,
     Playing,
+    GameOver,
     Shopping,
 }
 
@@ -97,7 +97,7 @@ fn draw_ball(canvas: &mut Canvas2d, position: Vec2, radius: f32, texture: &Textu
     );
 }
 
-fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &Resources) {
+fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources) {
     canvas.fit_screen();
 
     canvas.pixel_perfect_view();
@@ -127,8 +127,8 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &Resources) {
             canvas,
             ball.position,
             ball.radius,
-            if let BallType::Enemy(_) = ball.letypedelaboule {
-                &resources.ball1
+            if let BallType::Enemy(e) = ball.letypedelaboule {
+                &resources.balls[e.timer]
             } else {
                 &resources.slimeball
             },
@@ -185,6 +185,17 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &Resources) {
         }
     }
 
+    if game.state == GameState::GameOver {
+        canvas.draw_text(
+            Vec2::new(0.1, 0.3),
+            0.4,
+            "Game Over",
+            &mut resources.font,
+            color::WHITE,
+            &canvas.white_texture(),
+        );
+    }
+
     canvas.flush();
 }
 
@@ -197,7 +208,7 @@ async fn async_main() {
 
     let mut canvas = Canvas2d::new(&main_canvas);
 
-    let resources = Resources::load(&mut canvas).await;
+    let mut resources = Resources::load(&mut canvas).await;
 
     let mut game = Game {
         moves: BTreeMap::new(),
@@ -220,7 +231,7 @@ async fn async_main() {
             game_tick(&mut game);
         }
 
-        render_tick(&mut canvas, &mut game, &resources);
+        render_tick(&mut canvas, &mut game, &mut resources);
     });
 }
 

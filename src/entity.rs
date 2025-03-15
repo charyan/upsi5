@@ -8,7 +8,7 @@ pub enum BallType {
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub struct EnemyData {
-    pub timer: u32,
+    pub timer: usize,
 }
 
 #[derive(Clone, Copy)]
