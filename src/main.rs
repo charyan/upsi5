@@ -19,6 +19,7 @@ use world::World;
 
 mod entity;
 mod world;
+mod upgrade;
 
 fn game_tick(game: &mut Game) {
     if game.state == GameState::Running {
