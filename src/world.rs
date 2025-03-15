@@ -9,12 +9,12 @@ const COLLISION_SMOOTHNESS: f32 = 0.03;
 pub const WORLD_DIM: Vec2 = Vec2::new(1.926, 1.01);
 const HOLE_RADIUS: f32 = 0.038;
 const HOLES: [Vec2; 6] = [
-    Vec2::ZERO,
-    Vec2::new(0., WORLD_DIM.y),
-    Vec2::new(WORLD_DIM.x / 2., 0.),
-    Vec2::new(WORLD_DIM.x / 2., WORLD_DIM.y),
-    Vec2::new(WORLD_DIM.x, 0.),
-    Vec2::new(WORLD_DIM.x, WORLD_DIM.y),
+    Vec2::new(HOLE_RADIUS, HOLE_RADIUS),
+    Vec2::new(HOLE_RADIUS, WORLD_DIM.y - HOLE_RADIUS),
+    Vec2::new(WORLD_DIM.x / 2., HOLE_RADIUS),
+    Vec2::new(WORLD_DIM.x / 2., WORLD_DIM.y - HOLE_RADIUS),
+    Vec2::new(WORLD_DIM.x - HOLE_RADIUS, HOLE_RADIUS),
+    Vec2::new(WORLD_DIM.x - HOLE_RADIUS, WORLD_DIM.y- HOLE_RADIUS),
 ];
 
 pub struct World {
