@@ -5,7 +5,7 @@ use glam::Vec2;
 use marmalade::rand;
 
 const COLLISION_SMOOTHNESS: f32 = 0.03;
-const COIN_RADIUS: f32 = 0.01;
+pub const COIN_RADIUS: f32 = 0.01;
 const COIN_PRICE: u32 = 100;
 pub const WORLD_DIM: Vec2 = Vec2::new(1.926, 1.01);
 const HOLE_RADIUS: f32 = 0.038;

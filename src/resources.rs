@@ -9,6 +9,7 @@ pub struct Resources {
     pub slimeball: TextureRect,
     pub balls: [TextureRect; 6],
     pub aimcircle: TextureRect,
+    pub coin: TextureRect,
     pub font: Font,
 }
 
@@ -28,6 +29,7 @@ impl Resources {
         let ball4 = load_texture(canvas, include_bytes!("../assets/ball4.png")).await;
         let ball5 = load_texture(canvas, include_bytes!("../assets/ball5.png")).await;
         let aimcircle = load_texture(canvas, include_bytes!("../assets/aimcircle.png")).await;
+        let coin = load_texture(canvas, include_bytes!("../assets/coin.png")).await;
 
         let font = font::from_bytes(font::MONOGRAM);
 
@@ -36,6 +38,7 @@ impl Resources {
             slimeball,
             balls: [ball0, ball1, ball2, ball3, ball4, ball5],
             aimcircle,
+            coin,
             font,
         }
     }

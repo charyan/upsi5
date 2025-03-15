@@ -120,6 +120,10 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
         table_size.x / 2.,
     );
 
+    for &coin in &game.world.coins {
+        draw_ball(canvas, coin, world::COIN_RADIUS, &resources.coin);
+    }
+
     for ball in &game.world.balls {
         let ball = ball.borrow();
 
