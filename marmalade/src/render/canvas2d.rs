@@ -554,6 +554,24 @@ impl Canvas2d {
         ));
     }
 
+    pub fn camera_view_ratio(&mut self, cam_pos: Vec2, mut view_radius: f32, target_ratio: f32) {
+        let height_factor = self.canvas.width() as f32 / self.canvas.height() as f32;
+
+        if height_factor > target_ratio {
+            view_radius *= height_factor / target_ratio
+        }
+
+        self.set_view_matrix(Mat3::from_cols(
+            Vec3::new(1. / view_radius, 0., 0.),
+            Vec3::new(0., height_factor / view_radius, 0.),
+            Vec3::new(
+                -cam_pos.x / view_radius,
+                -height_factor * cam_pos.y / view_radius,
+                1.,
+            ),
+        ));
+    }
+
     /// Computes the world coordinates corresponding to the given screen coordinates with the current view matrix
     #[must_use]
     pub fn screen_to_world_pos(&self, screen_pos: Vec2) -> Vec2 {

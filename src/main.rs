@@ -32,6 +32,8 @@ const PRICE_AIM_ASSIST: [u32; 5] = [500, 1500, 3000, 5000, 10000];
 const PRICE_PROFITABILITY: [u32; 5] = [500, 1500, 3000, 5000, 10000];
 const PRICE_SLIDING: [u32; 5] = [500, 1500, 3000, 5000, 10000];
 
+const ASPECT_RATIO: f32 = 4. / 3.;
+
 fn game_tick(game: &mut Game, resources: &mut Resources) {
     if game.state == GameState::Running {
         let (run, sounds) = game.world.tick();
@@ -114,9 +116,11 @@ fn draw_ball(canvas: &mut Canvas2d, position: Vec2, radius: f32, texture: &Textu
 fn draw_game(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources) {
     let table_size: Vec2 = WORLD_DIM + Vec2::splat(BORDER_SIZE * 2.);
 
-    canvas.camera_view(
-        table_size / 2. - Vec2::splat(BORDER_SIZE),
+    canvas.camera_view_ratio(
+        table_size / 2. - Vec2::splat(BORDER_SIZE)
+            + Vec2::new(0., (table_size.x / ASPECT_RATIO - table_size.y) / 2.),
         table_size.x / 2.,
+        ASPECT_RATIO,
     );
 
     for &coin in &game.world.coins {
@@ -146,7 +150,11 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
 
     let table_size: Vec2 = WORLD_DIM + Vec2::splat(BORDER_SIZE * 2.);
 
-    canvas.camera_view(table_size / 2., table_size.x / 2.);
+    canvas.camera_view_ratio(
+        table_size / 2. + Vec2::new(0., (table_size.x / ASPECT_RATIO - table_size.y) / 2.),
+        table_size.x / 2.,
+        ASPECT_RATIO,
+    );
 
     canvas.draw_rect(
         Vec2::new(0., 0.),
@@ -226,7 +234,11 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             }
         }
         GameState::Shopping => {
-            canvas.camera_view(table_size / 2., table_size.x / 2.);
+            canvas.camera_view_ratio(
+                table_size / 2. + Vec2::new(0., (table_size.x / ASPECT_RATIO - table_size.y) / 2.),
+                table_size.x / 2.,
+                ASPECT_RATIO,
+            );
 
             canvas.draw_rect(
                 Vec2::new(0.5, 0.5),
