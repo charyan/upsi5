@@ -22,7 +22,7 @@ impl Resources {
         let pool_table = load_texture(canvas, include_bytes!("../assets/pool_table.png")).await;
         let slimeball = load_texture(canvas, include_bytes!("../assets/slimeball.png")).await;
 
-        let ball0 = load_texture(canvas, include_bytes!("../assets/ball1.png")).await;
+        let endball = load_texture(canvas, include_bytes!("../assets/endball.png")).await;
         let ball1 = load_texture(canvas, include_bytes!("../assets/ball1.png")).await;
         let ball2 = load_texture(canvas, include_bytes!("../assets/ball2.png")).await;
         let ball3 = load_texture(canvas, include_bytes!("../assets/ball3.png")).await;
@@ -36,7 +36,7 @@ impl Resources {
         Self {
             pool_table,
             slimeball,
-            balls: [ball0, ball1, ball2, ball3, ball4, ball5],
+            balls: [endball, ball1, ball2, ball3, ball4, ball5],
             aimcircle,
             coin,
             font,
