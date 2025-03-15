@@ -49,6 +49,7 @@ enum GameState {
     Playing,
     GameOver,
     Shopping,
+    Menu,
 }
 
 struct Game {
@@ -96,23 +97,8 @@ fn draw_ball(canvas: &mut Canvas2d, position: Vec2, radius: f32, texture: &Textu
     );
 }
 
-fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources) {
-    canvas.fit_screen();
-
-    canvas.pixel_perfect_view();
-
-    canvas.clear(color::rgb(0., 0., 0.));
-
+fn draw_game(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources) {
     let table_size: Vec2 = WORLD_DIM + Vec2::splat(BORDER_SIZE * 2.);
-
-    canvas.camera_view(table_size / 2., table_size.x / 2.);
-
-    canvas.draw_rect(
-        Vec2::new(0., 0.),
-        table_size,
-        color::WHITE,
-        &resources.pool_table,
-    );
 
     canvas.camera_view(
         table_size / 2. - Vec2::splat(BORDER_SIZE),
@@ -137,66 +123,117 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             },
         );
     }
+}
 
-    if game.state == GameState::Playing {
-        for (i, b) in game.world.balls.iter().enumerate() {
-            if let Some(&m) = game.moves.get(&i) {
-                let b = b.borrow();
+fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources) {
+    canvas.fit_screen();
 
-                draw_line(canvas, b.position, m, 0.005);
-            }
-        }
+    canvas.clear(color::rgb(0., 0., 0.));
 
-        if input::is_button_pressed(Button::Left) {
-            let mouse_pos = input::mouse_position().as_vec2();
+    let table_size: Vec2 = WORLD_DIM + Vec2::splat(BORDER_SIZE * 2.);
 
+    canvas.camera_view(table_size / 2., table_size.x / 2.);
+
+    canvas.draw_rect(
+        Vec2::new(0., 0.),
+        table_size,
+        color::WHITE,
+        &resources.pool_table,
+    );
+
+    match game.state {
+        GameState::Playing => {
+            draw_game(canvas, game, resources);
             for (i, b) in game.world.balls.iter().enumerate() {
-                let b = b.borrow();
+                if let Some(&m) = game.moves.get(&i) {
+                    let b = b.borrow();
 
-                if let BallType::Player = b.letypedelaboule {
-                    if b.position.distance(canvas.screen_to_world_pos(mouse_pos)) < b.radius {
-                        game.selected = Some(i);
+                    draw_line(canvas, b.position, m, 0.005);
+                }
+            }
+
+            if input::is_button_pressed(Button::Left) {
+                let mouse_pos = input::mouse_position().as_vec2();
+
+                for (i, b) in game.world.balls.iter().enumerate() {
+                    let b = b.borrow();
+
+                    if let BallType::Player = b.letypedelaboule {
+                        if b.position.distance(canvas.screen_to_world_pos(mouse_pos)) < b.radius {
+                            game.selected = Some(i);
+                        }
                     }
                 }
             }
-        }
-        if let Some(selected) = game.selected {
-            let mut move_vector = canvas.screen_to_world_pos(input::mouse_position().as_vec2())
-                - game.world.balls[selected].borrow().position;
+            if let Some(selected) = game.selected {
+                let mut move_vector = canvas.screen_to_world_pos(input::mouse_position().as_vec2())
+                    - game.world.balls[selected].borrow().position;
 
-            if move_vector.length() > 0.15 {
-                move_vector *= 0.15 / move_vector.length();
+                if move_vector.length() > 0.15 {
+                    move_vector *= 0.15 / move_vector.length();
+                }
+
+                if !input::is_button_down(Button::Left) {
+                    game.moves.insert(selected, move_vector);
+                    game.selected = None;
+                }
+
+                let ball_pos = game.world.balls[selected].borrow().position;
+
+                draw_ball(canvas, ball_pos, 0.15, &resources.aimcircle);
+
+                draw_line(canvas, ball_pos, move_vector, 0.01);
             }
+            if input::is_key_pressed(Key::Space) {
+                game.state = GameState::Running;
 
-            if !input::is_button_down(Button::Left) {
-                game.moves.insert(selected, move_vector);
-                game.selected = None;
+                let moves = mem::replace(&mut game.moves, BTreeMap::new());
+
+                game.world.launch_round(moves);
             }
-
-            let ball_pos = game.world.balls[selected].borrow().position;
-
-            draw_ball(canvas, ball_pos, 0.15, &resources.aimcircle);
-
-            draw_line(canvas, ball_pos, move_vector, 0.01);
         }
-        if input::is_key_pressed(Key::Space) {
-            game.state = GameState::Running;
+        GameState::GameOver => {
+            draw_game(canvas, game, resources);
+            canvas.draw_text(
+                Vec2::new(0.1, 0.3),
+                0.4,
+                "Game Over",
+                &mut resources.font,
+                color::WHITE,
+                &canvas.white_texture(),
+            );
 
-            let moves = mem::replace(&mut game.moves, BTreeMap::new());
-
-            game.world.launch_round(moves);
+            if input::is_key_pressed(Key::Space) {
+                game.state = GameState::Shopping
+            }
         }
-    }
+        GameState::Shopping => {
+            canvas.camera_view(table_size / 2. - Vec2::splat(BORDER_SIZE), 1.);
 
-    if game.state == GameState::GameOver {
-        canvas.draw_text(
-            Vec2::new(0.1, 0.3),
-            0.4,
-            "Game Over",
-            &mut resources.font,
-            color::WHITE,
-            &canvas.white_texture(),
-        );
+            canvas.draw_rect(
+                Vec2::new(0.5, 0.5),
+                Vec2::new(0.5, 0.5),
+                color::rgb(1., 1., 1.),
+                &canvas.white_texture(),
+            );
+        }
+        GameState::Menu => {
+            canvas.draw_text(
+                Vec2::new(0.1, 0.3),
+                0.4,
+                "SPOOL",
+                &mut resources.font,
+                color::WHITE,
+                &canvas.white_texture(),
+            );
+
+            if input::is_key_pressed(Key::Space) {
+                game.state = GameState::Playing
+            }
+        }
+        GameState::Running => {
+            draw_game(canvas, game, resources);
+        }
     }
 
     canvas.flush();
@@ -216,7 +253,7 @@ async fn async_main() {
     let mut game = Game {
         moves: BTreeMap::new(),
         world: World::new(0, 0, 0, 0),
-        state: GameState::Playing,
+        state: GameState::Menu,
         selected: None,
         aim_assist_level: 0,
         max_speed_level: 4,
@@ -225,9 +262,7 @@ async fn async_main() {
         sliding_level: 0,
         total_money: 0,
     };
-
-    let mut tick_scheduler = TickScheduler::new(Duration::from_millis(1));
-
+    let mut tick_scheduler: TickScheduler = TickScheduler::new(Duration::from_millis(1));
     draw_scheduler::set_on_draw(move || {
         for _ in 0..tick_scheduler.tick_count() {
             game_tick(&mut game);
