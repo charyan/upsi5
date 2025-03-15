@@ -3,7 +3,6 @@ use glam::Mat3;
 use glam::Vec2;
 use marmalade::dom_stack;
 use marmalade::draw_scheduler;
-use marmalade::image;
 use marmalade::input;
 use marmalade::input::Button;
 use marmalade::input::Key;
@@ -12,6 +11,7 @@ use marmalade::render::canvas2d::DrawTarget2d;
 use marmalade::render::canvas2d::TextureRect;
 use marmalade::render::color;
 use marmalade::tick_scheduler::TickScheduler;
+use resources::Resources;
 use std::collections::BTreeMap;
 use std::mem;
 use std::time::Duration;
@@ -19,6 +19,7 @@ use world::WORLD_DIM;
 use world::World;
 
 mod entity;
+mod resources;
 mod upgrade;
 mod world;
 
@@ -41,10 +42,6 @@ fn game_tick(game: &mut Game) {
             }
         }
     }
-}
-
-struct Resources {
-    pool_table: TextureRect,
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -89,6 +86,15 @@ fn draw_line(canvas: &mut Canvas2d, position: Vec2, length: Vec2, width: f32) {
     canvas.set_view_matrix(previous);
 }
 
+fn draw_ball(canvas: &mut Canvas2d, position: Vec2, radius: f32, texture: &TextureRect) {
+    canvas.draw_rect(
+        position - Vec2::splat(radius),
+        Vec2::splat(radius * 2.),
+        color::WHITE,
+        texture,
+    );
+}
+
 fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &Resources) {
     canvas.fit_screen();
 
@@ -113,16 +119,17 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &Resources) {
     );
 
     for ball in &game.world.balls {
-        canvas.draw_regular(
-            ball.borrow().position,
-            ball.borrow().radius,
-            64,
-            if let BallType::Enemy(_) = ball.borrow().letypedelaboule {
-                color::rgb(1., 0.5, 0.5)
+        let ball = ball.borrow();
+
+        draw_ball(
+            canvas,
+            ball.position,
+            ball.radius,
+            if let BallType::Enemy(_) = ball.letypedelaboule {
+                &resources.ball1
             } else {
-                color::rgb(0.098, 0.76, 0.01)
+                &resources.slimeball
             },
-            &canvas.white_texture(),
         );
     }
 
@@ -186,11 +193,7 @@ async fn async_main() {
 
     let mut canvas = Canvas2d::new(&main_canvas);
 
-    let pool_table = image::from_bytes(include_bytes!("../assets/pool_table.png")).await;
-
-    let pool_table = canvas.create_texture(&pool_table);
-
-    let resources = Resources { pool_table };
+    let resources = Resources::load(&mut canvas).await;
 
     let mut game = Game {
         moves: BTreeMap::new(),
