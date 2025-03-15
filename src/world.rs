@@ -1,8 +1,8 @@
 use std::{cell::RefCell, collections::BTreeMap};
 
+use crate::entity::{self, Ball, BallType, EnemyData};
 use glam::Vec2;
 use marmalade::rand;
-use crate::entity::{self, Ball, BallType, EnemyData};
 
 const COLLISION_SMOOTHNESS: f32 = 0.03;
 
@@ -14,13 +14,15 @@ const HOLES: [Vec2; 6] = [
     Vec2::new(WORLD_DIM.x / 2., HOLE_RADIUS),
     Vec2::new(WORLD_DIM.x / 2., WORLD_DIM.y - HOLE_RADIUS),
     Vec2::new(WORLD_DIM.x - HOLE_RADIUS, HOLE_RADIUS),
-    Vec2::new(WORLD_DIM.x - HOLE_RADIUS, WORLD_DIM.y- HOLE_RADIUS),
+    Vec2::new(WORLD_DIM.x - HOLE_RADIUS, WORLD_DIM.y - HOLE_RADIUS),
 ];
+const MAX_POS_TRY: i32 = 100;
 
 pub struct World {
     pub balls: Vec<RefCell<entity::Ball>>,
     money: u32,
     round: u32,
+    game_over: bool,
 }
 
 impl World {
@@ -28,51 +30,86 @@ impl World {
         let mut new_world = World {
             balls: vec![],
             money: 0,
-            round:1
+            round: 1,
+            game_over: false,
         };
-        new_world.add_ball(Vec2::new(WORLD_DIM.x / 4., WORLD_DIM.y/2.), 0.025, 1., 0.9995, entity::BallType::Player);
+        new_world.add_ball(
+            Vec2::new(WORLD_DIM.x / 4., WORLD_DIM.y / 2.),
+            0.025,
+            1.,
+            0.9995,
+            entity::BallType::Player,
+        );
         new_world
     }
 
     pub fn spawn_round(&mut self) {
-        let x1 = HOLE_RADIUS;
-        let x2 = WORLD_DIM.x - HOLE_RADIUS;
-        let y1 = HOLE_RADIUS;
-        let y2 = WORLD_DIM.y - HOLE_RADIUS;
+        for ball in &mut self.balls {
+            if let BallType::Enemy(mut enemy_data) = ball.borrow_mut().letypedelaboule {
+                enemy_data.timer = enemy_data.timer - 1;
+            }
+        }
 
-        let new_radius = self.round as f32 * 0.01;
-        let new_mass = self.round as f32 * 1.;
+        let new_radius = (self.round as f32).sqrt() * 0.01;
+
+        let x1 = HOLE_RADIUS + new_radius;
+        let x2 = WORLD_DIM.x - HOLE_RADIUS - new_radius;
+        let y1 = HOLE_RADIUS + new_radius;
+        let y2 = WORLD_DIM.y - HOLE_RADIUS - new_radius;
+
+        let new_mass = self.round as f32 * 0.05;
         let new_friction_coeff = 0.9995;
         let mut pos_not_ok = true;
-        let mut new_pos;
-        
-        while pos_not_ok{
-            new_pos = Vec2::new(rand::rand_range(x1 as f64, x2 as f64) as f32, rand::rand_range(y1 as f64,y2 as f64) as f32);
+        let mut new_pos = Vec2::ZERO;
+        let mut count = 0;
+        let mut loose = false;
+
+        while pos_not_ok {
+            if count > MAX_POS_TRY {
+                loose = true;
+                break;
+            }
+            new_pos = Vec2::new(
+                rand::rand_range(x1 as f64, x2 as f64) as f32,
+                rand::rand_range(y1 as f64, y2 as f64) as f32,
+            );
             pos_not_ok = false;
             for index in 0..self.balls.len() {
                 let ball = self.balls[index].borrow();
-        
+
                 let dist = ball.position - new_pos;
-        
+
                 if ball.radius + new_radius - dist.length() > 0. {
                     pos_not_ok = true;
                 }
+            }
+            count += 1;
         }
-
-        let new_ball = Ball{
-            radius: new_radius,
-            mass:new_mass,
-            position: new_pos,
-            speed: Vec2::ZERO,
-            friction_coeff: new_friction_coeff,
-            letypedelaboule: BallType::Enemy(EnemyData {price: (new_mass * 100.) as u32}),
-        };
-        self.balls.push(RefCell::new(new_ball));
+        self.add_ball(
+            new_pos,
+            new_radius,
+            new_mass,
+            new_friction_coeff,
+            BallType::Enemy(EnemyData {
+                price: (new_mass * 100.) as u32,
+                timer: 5,
+            }),
+        );
+        self.game_over |= loose;
     }
 
+    pub fn is_game_over(&self) -> bool {
+        self.game_over
     }
 
-    fn add_ball(&mut self, position: Vec2, radius: f32, mass: f32, friction_coeff: f32, letypedelaboule: entity::BallType) {
+    fn add_ball(
+        &mut self,
+        position: Vec2,
+        radius: f32,
+        mass: f32,
+        friction_coeff: f32,
+        letypedelaboule: entity::BallType,
+    ) {
         let new_ball = entity::Ball {
             position,
             radius,
@@ -124,12 +161,26 @@ impl World {
             }
         }
 
+        let mut player_ball = false;
+        let mut counter_ball_low = false;
+
+        for ball in &self.balls {
+            if let BallType::Enemy(enemy_data) = ball.borrow().letypedelaboule {
+                if enemy_data.timer < 1 {
+                    counter_ball_low = true
+                }
+            } else {
+                player_ball = true;
+            }
+        }
+        self.game_over |= !player_ball | counter_ball_low;
+
         false
     }
 
     fn in_hole(&self, ball: &entity::Ball) -> bool {
         for hole in &HOLES {
-            if ball.radius + HOLE_RADIUS > ball.position.distance(*hole) {
+            if HOLE_RADIUS > ball.position.distance(*hole) {
                 return true;
             }
         }
@@ -195,7 +246,9 @@ impl World {
         let overlap = ball_a.radius + ball_b.radius - dist.length();
 
         if overlap > 0. {
-            if ball_a.letypedelaboule==BallType::Player && ball_b.letypedelaboule==BallType::Player {
+            if ball_a.letypedelaboule == BallType::Player
+                && ball_b.letypedelaboule == BallType::Player
+            {
                 let tot_mass = ball_a.mass + ball_b.mass;
                 let new_ball = entity::Ball {
                     mass: tot_mass,
