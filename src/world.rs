@@ -6,6 +6,7 @@ use marmalade::{console, rand};
 
 const COLLISION_SMOOTHNESS: f32 = 0.03;
 const COIN_RADIUS: f32 = 0.01;
+const COIN_PRICE: u32 = 100;
 pub const WORLD_DIM: Vec2 = Vec2::new(1.926, 1.01);
 const HOLE_RADIUS: f32 = 0.038;
 const HOLES: [Vec2; 6] = [
@@ -27,7 +28,7 @@ pub struct World {
     pub balls: Vec<RefCell<entity::Ball>>,
     pub money: u32,
     pub round: u32,
-    coins: Vec<Vec2>,
+    pub coins: Vec<Vec2>,
     game_over: bool,
     max_speed_level: usize,
     profitability_level: usize,
@@ -65,6 +66,7 @@ impl World {
         let coin_number: usize = rand::rand_range(1., 5.) as usize;
         for _ in 0..coin_number {
             let coin_pos = self.get_free_pos(COIN_RADIUS);
+            self.coins.push(coin_pos);
         }
     }
 
@@ -151,6 +153,8 @@ impl World {
     pub fn tick(&mut self) -> bool {
         let mut trash = Vec::new();
         let mut new_balls = Vec::new();
+        let mut coin_trash: Vec<usize> = Vec::new();
+
         for (index, ball_cell) in self.balls.iter().enumerate() {
             {
                 let mut ball = ball_cell.borrow_mut();
@@ -168,10 +172,22 @@ impl World {
                     new_balls.push(RefCell::new(new_ball));
                 }
             }
+
+            for (coin_index, coin) in self.coins.iter().enumerate() {
+                let ball = ball_cell.borrow();
+                if ball.radius + COIN_RADIUS - (ball.position - coin).length() > 0. {
+                    coin_trash.push(coin_index);
+                    self.money += COIN_PRICE * PROFITABILITY_SCALING[self.profitability_level];
+                }
+            }
         }
 
         trash.sort();
+        coin_trash.sort();
 
+        for bye_bye in coin_trash.into_iter().rev() {
+            self.coins.remove(bye_bye);
+        }
         for bye_bye in trash.into_iter().rev() {
             self.balls.remove(bye_bye);
         }
