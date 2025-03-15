@@ -11,6 +11,12 @@ pub struct Resources {
     pub balls: [TextureRect; 6],
     pub aimcircle: TextureRect,
     pub coin: TextureRect,
+    pub speed_upgrade: TextureRect,
+    pub slide_upgrade: TextureRect,
+    pub heavy_upgrade: TextureRect,
+    pub coin_upgrade: TextureRect,
+    pub aim_upgrade: TextureRect,
+    pub button: TextureRect,
     pub font: Font,
     pub sounds_slimeslime: audio::Audio,
     pub sounds_coin: audio::Audio,
@@ -33,7 +39,16 @@ impl Resources {
         let ball4 = load_texture(canvas, include_bytes!("../assets/ball4.png")).await;
         let ball5 = load_texture(canvas, include_bytes!("../assets/ball5.png")).await;
         let aimcircle = load_texture(canvas, include_bytes!("../assets/aimcircle.png")).await;
-        let coin = load_texture(canvas, include_bytes!("../assets/coin.png")).await;
+        let coin: TextureRect = load_texture(canvas, include_bytes!("../assets/coin.png")).await;
+        let speed_upgrade =
+            load_texture(canvas, include_bytes!("../assets/speedupgrade.png")).await;
+        let slide_upgrade =
+            load_texture(canvas, include_bytes!("../assets/slideupgrade.png")).await;
+        let heavy_upgrade =
+            load_texture(canvas, include_bytes!("../assets/heavyupgrade.png")).await;
+        let coin_upgrade = load_texture(canvas, include_bytes!("../assets/coinupgrade.png")).await;
+        let aim_upgrade = load_texture(canvas, include_bytes!("../assets/aimupgrade.png")).await;
+        let button = load_texture(canvas, include_bytes!("../assets/button.png")).await;
 
         let font = font::from_bytes(font::MONOGRAM);
 
@@ -52,6 +67,12 @@ impl Resources {
             sounds_coin,
             sounds_shot,
             sounds_slimeslime,
+            aim_upgrade,
+            coin_upgrade,
+            heavy_upgrade,
+            slide_upgrade,
+            speed_upgrade,
+            button,
         }
     }
 }

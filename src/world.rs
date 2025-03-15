@@ -36,7 +36,6 @@ const ENEMY_MASS: f32 = 0.15;
 #[derive(PartialEq, PartialOrd, Eq, Ord)]
 pub enum Sounds {
     SlimeSlime,
-    Shoot,
     Coin,
 }
 

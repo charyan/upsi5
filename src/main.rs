@@ -1,6 +1,7 @@
 use entity::BallType;
 use glam::Mat3;
 use glam::Vec2;
+use glam::Vec4;
 use marmalade::audio;
 use marmalade::dom_stack;
 use marmalade::draw_scheduler;
@@ -26,11 +27,17 @@ mod world;
 
 const BORDER_SIZE: f32 = 0.068;
 
-const PRICE_MAX_SPEED: [u32; 5] = [500, 1500, 3000, 5000, 10000];
-const PRICE_START_MASS: [u32; 5] = [500, 1500, 3000, 5000, 10000];
-const PRICE_AIM_ASSIST: [u32; 5] = [500, 1500, 3000, 5000, 10000];
-const PRICE_PROFITABILITY: [u32; 5] = [500, 1500, 3000, 5000, 10000];
-const PRICE_SLIDING: [u32; 5] = [500, 1500, 3000, 5000, 10000];
+const PRICE_MAX_SPEED: [u32; 4] = [500, 1500, 3000, 5000];
+const PRICE_START_MASS: [u32; 4] = [500, 1500, 3000, 5000];
+const PRICE_AIM_ASSIST: [u32; 4] = [500, 1500, 3000, 5000];
+const PRICE_PROFITABILITY: [u32; 4] = [500, 1500, 3000, 5000];
+const PRICE_SLIDING: [u32; 4] = [500, 1500, 3000, 5000];
+
+const ICON_SIZE: Vec2 = Vec2::splat(0.2);
+const ICON_SPACE: Vec2 = Vec2::splat(ICON_SIZE.x + 0.15);
+const BUTTON_SIZE: Vec2 = Vec2::new(0.2, 0.06);
+const BUTTON_SPACE: f32 = 0.1;
+const BUTTON_FONT_SIZE: f32 = 0.04;
 
 const ASPECT_RATIO: f32 = 4. / 3.;
 
@@ -106,7 +113,7 @@ fn draw_line(canvas: &mut Canvas2d, position: Vec2, length: Vec2, width: f32) {
 
 fn draw_ball(canvas: &mut Canvas2d, position: Vec2, radius: f32, texture: &TextureRect) {
     canvas.draw_rect(
-        position - Vec2::splat(radius),
+        position - radius,
         Vec2::splat(radius * 2.),
         color::WHITE,
         texture,
@@ -240,11 +247,69 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
                 ASPECT_RATIO,
             );
 
-            canvas.draw_rect(
-                Vec2::new(0.5, 0.5),
-                Vec2::new(0.5, 0.5),
-                color::rgb(1., 1., 1.),
-                &canvas.white_texture(),
+            let icon_middle_pos =
+                Vec2::new(table_size.x / 2. - ICON_SIZE.x / 2., table_size.y / 2.);
+
+            let mouse_position = if input::is_button_pressed(Button::Left) {
+                Some(canvas.screen_to_world_pos(input::mouse_position().as_vec2()))
+            } else {
+                None
+            };
+
+            // Icon
+            draw_upgrade(
+                canvas,
+                icon_middle_pos - Vec2::new(2. * ICON_SPACE.x, 0.),
+                &resources.aim_upgrade.clone(),
+                &PRICE_AIM_ASSIST,
+                &mut game.aim_assist_level,
+                &mut game.total_money,
+                resources,
+                &mouse_position,
+            );
+
+            draw_upgrade(
+                canvas,
+                icon_middle_pos - Vec2::new(1. * ICON_SPACE.x, 0.),
+                &resources.speed_upgrade.clone(),
+                &PRICE_MAX_SPEED,
+                &mut game.max_speed_level,
+                &mut game.total_money,
+                resources,
+                &mouse_position,
+            );
+
+            draw_upgrade(
+                canvas,
+                icon_middle_pos,
+                &resources.coin_upgrade.clone(),
+                &PRICE_PROFITABILITY,
+                &mut game.profitability_level,
+                &mut game.total_money,
+                resources,
+                &mouse_position,
+            );
+
+            draw_upgrade(
+                canvas,
+                icon_middle_pos + Vec2::new(1. * ICON_SPACE.x, 0.),
+                &resources.heavy_upgrade.clone(),
+                &PRICE_START_MASS,
+                &mut game.start_mass_level,
+                &mut game.total_money,
+                resources,
+                &mouse_position,
+            );
+
+            draw_upgrade(
+                canvas,
+                icon_middle_pos + Vec2::new(2. * ICON_SPACE.x, 0.),
+                &resources.slide_upgrade.clone(),
+                &PRICE_SLIDING,
+                &mut game.sliding_level,
+                &mut game.total_money,
+                resources,
+                &mouse_position,
             );
         }
         GameState::Menu => {
@@ -264,6 +329,77 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
     }
 
     canvas.flush();
+}
+
+fn draw_upgrade(
+    canvas: &mut Canvas2d,
+    position: Vec2,
+    icon_texture: &TextureRect,
+    price: &[u32; 4],
+    level: &mut usize,
+    total_money: &mut u32,
+    resources: &mut Resources,
+    mouse_position: &Option<Vec2>,
+) {
+    let color = if *level > 3 {
+        color::rgb(1., 1., 1.)
+    } else if price[*level] < *total_money {
+        color::rgb(0., 1., 0.)
+    } else {
+        color::rgb(1., 0., 0.)
+    };
+
+    let value = if *level < 4 {
+        format!("{}", price[*level])
+    } else {
+        "Max !".to_owned()
+    };
+
+    canvas.draw_rect(position, ICON_SIZE, color::WHITE, icon_texture);
+
+    let button_position = position + Vec2::new(0., -BUTTON_SPACE);
+
+    canvas.draw_rect(
+        position + Vec2::new(0., -BUTTON_SPACE),
+        BUTTON_SIZE,
+        color::WHITE,
+        &resources.button,
+    );
+
+    canvas.draw_text(
+        position + Vec2::new(0.02, -BUTTON_SPACE + 0.0225),
+        BUTTON_FONT_SIZE,
+        &value,
+        &mut resources.font,
+        color,
+        &canvas.white_texture(),
+    );
+
+    for rect_level in 0..5 {
+        canvas.draw_rect(
+            position + Vec2::new(-0.0325, rect_level as f32 * 0.0275 + 0.01),
+            Vec2::splat(0.025),
+            if rect_level <= *level {
+                color::rgb(0., 1., 0.)
+            } else {
+                color::rgb(0.5, 0.5, 0.5)
+            },
+            &canvas.white_texture(),
+        );
+    }
+
+    if let Some(mouse_position) = mouse_position {
+        if mouse_position.x > button_position.x
+            && mouse_position.x < button_position.x + BUTTON_SIZE.x
+            && mouse_position.y > button_position.y
+            && mouse_position.y < button_position.y + BUTTON_SIZE.y
+            && *level < 4
+            && *total_money > price[*level]
+        {
+            *total_money -= price[*level];
+            *level += 1
+        }
+    }
 }
 
 async fn async_main() {
@@ -287,7 +423,7 @@ async fn async_main() {
         profitability_level: 0,
         start_mass_level: 0,
         sliding_level: 0,
-        total_money: 0,
+        total_money: 1000,
     };
     let mut tick_scheduler: TickScheduler = TickScheduler::new(Duration::from_millis(1));
     draw_scheduler::set_on_draw(move || {
