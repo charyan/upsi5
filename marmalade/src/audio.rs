@@ -7,7 +7,9 @@ thread_local! {
     static CONTEXT: AudioContext = AudioContext::new().unwrap();
 }
 
-pub async fn from_bytes(bytes: &[u8]) -> AudioBuffer {
+type Audio = AudioBuffer;
+
+pub async fn from_bytes(bytes: &[u8]) -> Audio {
     JsFuture::from(CONTEXT.with(|c| {
         c.decode_audio_data(&Uint8Array::from(bytes).buffer())
             .unwrap()
@@ -18,7 +20,7 @@ pub async fn from_bytes(bytes: &[u8]) -> AudioBuffer {
     .unwrap()
 }
 
-pub fn play(audio: &AudioBuffer, volume: f32) {
+pub fn play(audio: &Audio, volume: f32) {
     CONTEXT.with(|c| {
         let source = c.create_buffer_source().unwrap();
         let gain = c.create_gain().unwrap();
