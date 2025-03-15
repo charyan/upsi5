@@ -71,6 +71,9 @@ fn game_tick(game: &mut Game, resources: &mut Resources) {
                 Sounds::SlimeEnemy => {
                     audio::play(&resources.sounds_slimeenemy, 1.);
                 }
+                Sounds::Falling => {
+                    audio::play(&resources.sounds_falling, 1.);
+                }
             }
         }
     }
@@ -462,7 +465,7 @@ fn draw_upgrade(
             && mouse_position.x < button_position.x + BUTTON_SIZE.x
             && mouse_position.y > button_position.y
             && mouse_position.y < button_position.y + BUTTON_SIZE.y
-            && *level < 4
+            && *level < price.len()
             && *total_money > price[*level]
         {
             *total_money -= price[*level];
@@ -487,11 +490,11 @@ async fn async_main() {
 
     let mut game = Game {
         moves: BTreeMap::new(),
-        world: World::new(4, 0, 0, 0),
+        world: World::new(0, 0, 0, 0),
         state: GameState::Menu,
         selected: None,
         aim_assist_level: 0,
-        max_speed_level: 4,
+        max_speed_level: 0,
         profitability_level: 0,
         start_mass_level: 0,
         sliding_level: 0,

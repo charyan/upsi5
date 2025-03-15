@@ -40,6 +40,7 @@ pub enum Sounds {
     SlimeEnemy,
     EnemyEnemy,
     Border,
+    Falling,
 }
 
 pub struct World {
@@ -218,6 +219,7 @@ impl World {
                 Self::check_border(&mut ball, &mut sounds);
                 if self.in_hole(&ball) {
                     trash.push(index);
+                    sounds.insert(Sounds::Falling);
                 }
             }
             for other_ball_index in index + 1..self.balls.len() {

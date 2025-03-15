@@ -27,6 +27,7 @@ pub struct Resources {
     pub sounds_slimeenemy: Audio,
     pub sounds_button: Audio,
     pub main_theme: Audio,
+    pub sounds_falling: Audio,
 }
 
 async fn load_texture(canvas: &mut Canvas2d, bytes: &[u8]) -> TextureRect {
@@ -69,6 +70,8 @@ impl Resources {
         let sounds_slimeenemy =
             audio::from_bytes(include_bytes!("../sounds/slimeenemy.flac")).await;
         let sounds_button = audio::from_bytes(include_bytes!("../sounds/button.flac")).await;
+        let sounds_falling = audio::from_bytes(include_bytes!("../sounds/falling.flac")).await;
+
         let main_theme = audio::from_bytes(include_bytes!("../sounds/sebastien.mp3")).await;
 
         Self {
@@ -93,6 +96,7 @@ impl Resources {
             sounds_slimeenemy,
             sounds_button,
             main_theme,
+            sounds_falling,
         }
     }
 }
