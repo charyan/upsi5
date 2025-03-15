@@ -18,7 +18,7 @@ const HOLES: [Vec2; 6] = [
 ];
 const MAX_POS_TRY: i32 = 100;
 
-const MAX_SPEED_SCALING: [f32; 5] = [0.001, 0.002, 0.005, 0.01, 0.025];
+const MAX_SPEED_SCALING: [f32; 5] = [0.003, 0.006, 0.015, 0.03, 0.075];
 const START_MASS_SCALING: [f32; 5] = [0.1, 0.5, 1., 1.5, 3.];
 const PROFITABILITY_SCALING: [u32; 5] = [1, 2, 5, 10, 25];
 pub struct World {
@@ -264,7 +264,8 @@ impl World {
                 let tot_mass = ball_a.mass + ball_b.mass;
                 let new_ball = Ball {
                     mass: tot_mass,
-                    position: (ball_a.position + ball_b.position) / (2.),
+                    position: (ball_a.position * ball_a.mass + ball_b.position * ball_b.mass)
+                        / (tot_mass),
                     speed: Vec2::new(
                         (ball_a.speed.x * ball_a.mass + ball_b.speed.x * ball_b.mass) / (tot_mass),
                         (ball_a.speed.y * ball_a.mass + ball_b.speed.y * ball_b.mass)
