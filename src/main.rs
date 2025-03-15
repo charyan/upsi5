@@ -1,4 +1,3 @@
-use entity::Ball;
 use entity::BallType;
 use glam::Mat3;
 use glam::Vec2;
@@ -25,11 +24,21 @@ mod world;
 
 const BORDER_SIZE: f32 = 0.068;
 
+const PRICE_MAX_SPEED: [u32; 5] = [500, 1500, 3000, 5000, 10000];
+const PRICE_START_MASS: [u32; 5] = [500, 1500, 3000, 5000, 10000];
+const PRICE_AIM_ASSIST: [u32; 5] = [500, 1500, 3000, 5000, 10000];
+const PRICE_PROFITABILITY: [u32; 5] = [500, 1500, 3000, 5000, 10000];
+
 fn game_tick(game: &mut Game) {
     if game.state == GameState::Running {
         if !game.world.tick() {
             game.state = GameState::Playing;
-            game.world.spawn_round();
+            if game.world.is_game_over() {
+                game.state = GameState::Shopping;
+                game.total_money += game.world.money;
+            } else {
+                game.world.spawn_round();
+            }
         }
     }
 }
@@ -42,6 +51,7 @@ struct Resources {
 enum GameState {
     Running,
     Playing,
+    Shopping,
 }
 
 struct Game {
@@ -49,6 +59,11 @@ struct Game {
     state: GameState,
     moves: BTreeMap<usize, Vec2>,
     selected: Option<usize>,
+    total_money: u32,
+    max_speed_level: usize,
+    start_mass_level: usize,
+    aim_assist_level: usize,
+    profitability_level: usize,
 }
 
 fn draw_line(canvas: &mut Canvas2d, position: Vec2, length: Vec2, width: f32) {
@@ -102,7 +117,11 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &Resources) {
             ball.borrow().position,
             ball.borrow().radius,
             64,
-            if let BallType::Enemy(_) = ball.borrow().letypedelaboule { color::rgb(1., 0.5, 0.5)} else {color::rgb(0.098, 0.76, 0.01)} ,
+            if let BallType::Enemy(_) = ball.borrow().letypedelaboule {
+                color::rgb(1., 0.5, 0.5)
+            } else {
+                color::rgb(0.098, 0.76, 0.01)
+            },
             &canvas.white_texture(),
         );
     }
@@ -175,9 +194,14 @@ async fn async_main() {
 
     let mut game = Game {
         moves: BTreeMap::new(),
-        world: World::new(),
+        world: World::new(0, 0, 0),
         state: GameState::Playing,
         selected: None,
+        aim_assist_level: 0,
+        max_speed_level: 4,
+        profitability_level: 0,
+        start_mass_level: 0,
+        total_money: 0,
     };
     game.world.spawn_round();
 

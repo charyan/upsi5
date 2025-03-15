@@ -18,25 +18,36 @@ const HOLES: [Vec2; 6] = [
 ];
 const MAX_POS_TRY: i32 = 100;
 
+const MAX_SPEED_SCALING: [f32; 5] = [0.001, 0.002, 0.005, 0.01, 0.025];
+const START_MASS_SCALING: [f32; 5] = [0.1, 0.5, 1., 1.5, 3.];
+const PROFITABILITY_SCALING: [u32; 5] = [1, 2, 5, 10, 25];
 pub struct World {
     pub balls: Vec<RefCell<entity::Ball>>,
-    money: u32,
-    round: u32,
+    pub money: u32,
+    pub round: u32,
     game_over: bool,
+    max_speed_level: usize,
+    profitability_level: usize,
 }
 
 impl World {
-    pub fn new() -> Self {
+    pub fn new(
+        max_speed_level: usize,
+        profitability_level: usize,
+        start_mass_level: usize,
+    ) -> Self {
         let mut new_world = World {
             balls: vec![],
             money: 0,
             round: 1,
             game_over: false,
+            max_speed_level,
+            profitability_level,
         };
         new_world.add_ball(
             Vec2::new(WORLD_DIM.x / 4., WORLD_DIM.y / 2.),
-            0.025,
-            1.,
+            START_MASS_SCALING[start_mass_level] / 4.,
+            START_MASS_SCALING[start_mass_level],
             0.9995,
             entity::BallType::Player,
         );
@@ -46,18 +57,18 @@ impl World {
     pub fn spawn_round(&mut self) {
         for ball in &mut self.balls {
             if let BallType::Enemy(mut enemy_data) = ball.borrow_mut().letypedelaboule {
-                enemy_data.timer = enemy_data.timer - 1;
+                enemy_data.timer -= 1;
             }
         }
 
-        let new_radius = (self.round as f32).sqrt() * 0.01;
+        let new_mass = self.round as f32 * 0.05;
+        let new_radius = new_mass / 4.;
 
         let x1 = HOLE_RADIUS + new_radius;
         let x2 = WORLD_DIM.x - HOLE_RADIUS - new_radius;
         let y1 = HOLE_RADIUS + new_radius;
         let y2 = WORLD_DIM.y - HOLE_RADIUS - new_radius;
 
-        let new_mass = self.round as f32 * 0.05;
         let new_friction_coeff = 0.9995;
         let mut pos_not_ok = true;
         let mut new_pos = Vec2::ZERO;
@@ -110,7 +121,7 @@ impl World {
         friction_coeff: f32,
         letypedelaboule: entity::BallType,
     ) {
-        let new_ball = entity::Ball {
+        let new_ball = Ball {
             position,
             radius,
             mass,
@@ -133,7 +144,7 @@ impl World {
                 if self.in_hole(&ball) {
                     trash.push(index);
                     if let BallType::Enemy(enemy) = ball.letypedelaboule {
-                        self.money += enemy.price;
+                        self.money += enemy.price * PROFITABILITY_SCALING[self.profitability_level];
                     }
                 }
             }
@@ -191,10 +202,11 @@ impl World {
         let mut new_balls = vec![];
         for (index, velocity) in &velocities {
             let ball = self.balls[*index].borrow();
+            let velocity = *velocity * MAX_SPEED_SCALING[self.max_speed_level];
             let ball1 = Ball::new(
                 ball.mass / 2.,
                 ball.position + velocity.normalize_or_zero() * ball.radius,
-                *velocity,
+                velocity,
                 ball.friction_coeff,
                 ball.radius / 2f32.sqrt(),
                 ball.letypedelaboule,
@@ -202,7 +214,7 @@ impl World {
             let ball2 = Ball::new(
                 ball.mass / 2.,
                 ball.position - velocity.normalize_or_zero() * ball.radius,
-                *velocity * -1.,
+                velocity * -1.,
                 ball.friction_coeff,
                 ball.radius / 2f32.sqrt(),
                 ball.letypedelaboule,
@@ -250,7 +262,7 @@ impl World {
                 && ball_b.letypedelaboule == BallType::Player
             {
                 let tot_mass = ball_a.mass + ball_b.mass;
-                let new_ball = entity::Ball {
+                let new_ball = Ball {
                     mass: tot_mass,
                     position: (ball_a.position + ball_b.position) / (2.),
                     speed: Vec2::new(
