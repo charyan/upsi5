@@ -32,7 +32,8 @@ const PRICE_SLIDING: [u32; 5] = [500, 1500, 3000, 5000, 10000];
 
 fn game_tick(game: &mut Game) {
     if game.state == GameState::Running {
-        if !game.world.tick() {
+        let (run, sounds) = game.world.tick();
+        if !run {
             game.state = GameState::Playing;
             game.world.spawn_round();
         }

@@ -1,4 +1,7 @@
-use std::{cell::RefCell, collections::BTreeMap};
+use std::{
+    cell::RefCell,
+    collections::{BTreeMap, BTreeSet},
+};
 
 use crate::entity::{self, Ball, BallType, EnemyData};
 use glam::Vec2;
@@ -29,6 +32,13 @@ pub const ENEMY_ROUND: [usize; 20] = [1, 0, 1, 0, 1, 2, 1, 0, 3, 1, 0, 2, 0, 1, 
 pub const PLAYER_START_SIZE: f32 = 0.05;
 pub const ENEMY_BALL_SIZE: f32 = 0.035;
 const ENEMY_MASS: f32 = 0.15;
+
+#[derive(PartialEq, PartialOrd, Eq, Ord)]
+pub enum Sounds {
+    SlimeSlime,
+    Shoot,
+    Coin,
+}
 
 pub struct World {
     pub balls: Vec<RefCell<entity::Ball>>,
@@ -193,11 +203,11 @@ impl World {
         self.balls.push(RefCell::new(new_ball));
     }
 
-    pub fn tick(&mut self) -> bool {
+    pub fn tick(&mut self) -> (bool, BTreeSet<Sounds>) {
         let mut trash = Vec::new();
         let mut new_balls = Vec::new();
         let mut coin_trash: Vec<usize> = Vec::new();
-
+        let mut sounds: BTreeSet<Sounds> = BTreeSet::new();
         for (index, ball_cell) in self.balls.iter().enumerate() {
             {
                 let mut ball = ball_cell.borrow_mut();
@@ -209,7 +219,7 @@ impl World {
                 }
             }
             for other_ball_index in index + 1..self.balls.len() {
-                if let Some((a, b, new_ball)) = self.collide(index, other_ball_index) {
+                if let Some((a, b, new_ball)) = self.collide(index, other_ball_index, &mut sounds) {
                     trash.push(a);
                     trash.push(b);
                     new_balls.push(RefCell::new(new_ball));
@@ -220,6 +230,7 @@ impl World {
                 let ball = ball_cell.borrow();
                 if ball.radius + COIN_RADIUS - (ball.position - coin).length() > 0. {
                     coin_trash.push(coin_index);
+                    sounds.insert(Sounds::Coin);
                     self.money += COIN_PRICE * PROFITABILITY_SCALING[self.profitability_level];
                 }
             }
@@ -240,7 +251,7 @@ impl World {
         for ball in &self.balls {
             let ball = ball.borrow();
             if ball.speed.length() > 0.00001 {
-                return true;
+                return (true, sounds);
             }
         }
 
@@ -253,7 +264,7 @@ impl World {
         }
         self.game_over |= !player_ball;
 
-        false
+        (false, sounds)
     }
 
     fn in_hole(&self, ball: &entity::Ball) -> bool {
@@ -315,7 +326,12 @@ impl World {
         }
     }
 
-    pub fn collide(&self, a: usize, b: usize) -> Option<(usize, usize, Ball)> {
+    pub fn collide(
+        &self,
+        a: usize,
+        b: usize,
+        sounds: &mut BTreeSet<Sounds>,
+    ) -> Option<(usize, usize, Ball)> {
         let mut ball_a = self.balls[a].borrow_mut();
         let mut ball_b = self.balls[b].borrow_mut();
 
@@ -341,6 +357,7 @@ impl World {
                     radius: (ball_a.radius.powf(2.) + ball_b.radius.powf(2.)).sqrt(),
                     letypedelaboule: BallType::Player,
                 };
+                sounds.insert(Sounds::SlimeSlime);
 
                 let smaller = a.min(b);
                 let bigger = a.max(b);
