@@ -24,6 +24,7 @@ pub mod font;
 pub mod image;
 pub mod input;
 pub mod net;
+pub mod rand;
 pub mod render;
 pub mod tick_scheduler;
 pub mod time;

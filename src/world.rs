@@ -7,7 +7,7 @@ use crate::entity::{self, Ball, BallType};
 
 const COLLISION_SMOOTHNESS: f32 = 0.03;
 
-pub const WORLD_DIM: Vec2 = Vec2::new(1.850, 0.925);
+pub const WORLD_DIM: Vec2 = Vec2::new(1.926, 1.01);
 const HOLE_RADIUS: f32 = 0.038;
 const HOLES: [Vec2; 6] = [
     Vec2::ZERO,
@@ -29,13 +29,11 @@ impl World {
         Self {
             balls: vec![],
             money: 0,
-            round:1
+            round: 1,
         }
     }
 
-    pub fn spawn_round(&mut self) {
-
-    }
+    pub fn spawn_round(&mut self) {}
 
     pub fn add_ball(&mut self, position: Vec2, radius: f32, mass: f32, friction_coeff: f32) {
         let new_ball = entity::Ball {
@@ -64,15 +62,14 @@ impl World {
                         self.money += enemy.price;
                     }
                 }
-            }   
+            }
             for other_ball_index in index + 1..self.balls.len() {
-                if let Some((a,b,new_ball)) = self.collide(index, other_ball_index) {
+                if let Some((a, b, new_ball)) = self.collide(index, other_ball_index) {
                     trash.push(a);
                     trash.push(b);
                     new_balls.push(RefCell::new(new_ball));
                 }
             }
-
         }
 
         trash.sort();
@@ -107,7 +104,7 @@ impl World {
         for (index, velocity) in &velocities {
             let ball = self.balls[*index].borrow();
             let ball1 = Ball::new(
-                ball.mass/2.,
+                ball.mass / 2.,
                 ball.position + velocity.normalize_or_zero() * ball.radius,
                 *velocity,
                 ball.friction_coeff,
@@ -115,7 +112,7 @@ impl World {
                 ball.letypedelaboule,
             );
             let ball2 = Ball::new(
-                ball.mass/2.,
+                ball.mass / 2.,
                 ball.position - velocity.normalize_or_zero() * ball.radius,
                 *velocity * -1.,
                 ball.friction_coeff,
@@ -130,7 +127,7 @@ impl World {
             self.balls.remove(*index);
         }
 
-        self.balls.extend(new_balls); 
+        self.balls.extend(new_balls);
         self.round += 1
     }
 
@@ -152,8 +149,7 @@ impl World {
         }
     }
 
-    pub fn collide(&self, a: usize, b: usize) -> Option<(usize,usize, Ball)>{
-        
+    pub fn collide(&self, a: usize, b: usize) -> Option<(usize, usize, Ball)> {
         let mut ball_a = self.balls[a].borrow_mut();
         let mut ball_b = self.balls[b].borrow_mut();
 
@@ -162,22 +158,27 @@ impl World {
         let overlap = ball_a.radius + ball_b.radius - dist.length();
 
         if overlap > 0. {
-            if ball_a.letypedelaboule==BallType::Player && ball_b.letypedelaboule==BallType::Player {
+            if ball_a.letypedelaboule == BallType::Player
+                && ball_b.letypedelaboule == BallType::Player
+            {
                 console::log("oui");
                 let tot_mass = ball_a.mass + ball_b.mass;
                 let new_ball = entity::Ball {
-                    mass :tot_mass,
-                    position : (ball_a.position + ball_b.position) / (2.),
-                    speed: Vec2::new((ball_a.speed.x * ball_a.mass + ball_b.speed.x * ball_b.mass) / (tot_mass), (ball_a.speed.y * ball_a.mass + ball_b.speed.y * ball_b.mass) / (2. * tot_mass)),
+                    mass: tot_mass,
+                    position: (ball_a.position + ball_b.position) / (2.),
+                    speed: Vec2::new(
+                        (ball_a.speed.x * ball_a.mass + ball_b.speed.x * ball_b.mass) / (tot_mass),
+                        (ball_a.speed.y * ball_a.mass + ball_b.speed.y * ball_b.mass)
+                            / (2. * tot_mass),
+                    ),
                     friction_coeff: ball_a.friction_coeff,
                     radius: (ball_a.radius.powf(2.) + ball_b.radius.powf(2.)).sqrt(),
-                    letypedelaboule: BallType::Player
+                    letypedelaboule: BallType::Player,
                 };
 
                 let smaller = a.min(b);
                 let bigger = a.max(b);
-                return Some((smaller, bigger, new_ball))
-
+                return Some((smaller, bigger, new_ball));
             } else {
                 let push = dist.normalize_or_zero() * overlap * COLLISION_SMOOTHNESS;
                 ball_a.speed = ball_a.speed + push * ball_a.mass / ball_b.mass;
@@ -185,6 +186,5 @@ impl World {
             }
         }
         None
-
     }
 }

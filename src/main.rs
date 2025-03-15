@@ -1,5 +1,4 @@
 use entity::BallType;
-use glam::Affine2;
 use glam::Mat3;
 use glam::Vec2;
 use marmalade::dom_stack;
@@ -20,8 +19,10 @@ use world::WORLD_DIM;
 use world::World;
 
 mod entity;
-mod world;
 mod upgrade;
+mod world;
+
+const BORDER_SIZE: f32 = 0.068;
 
 fn game_tick(game: &mut Game) {
     if game.state == GameState::Running {
