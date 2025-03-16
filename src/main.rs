@@ -239,7 +239,7 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
     );
 
     canvas.draw_text(
-        Vec2::new(1., 1.225),
+        Vec2::new(0.5, 1.225),
         0.1,
         &format!("Round: {}", game.world.round),
         &mut resources.font,
@@ -338,6 +338,14 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
         }
         GameState::GameOver => {
             draw_game(canvas, game, resources);
+
+            canvas.draw_rect(
+                Vec2::ZERO,
+                WORLD_DIM,
+                color::rgba(0., 0., 0., 0.4),
+                &canvas.white_texture(),
+            );
+
             canvas.draw_text(
                 WORLD_DIM / 2. - Vec2::new(0.65, 0.),
                 0.4,
@@ -348,9 +356,9 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             );
 
             canvas.draw_text(
-                Vec2::new(WORLD_DIM.x / 2. - 0.4, 0.35),
+                Vec2::new(WORLD_DIM.x / 2. - 0.35, 0.35),
                 0.1,
-                "Press space to continue.",
+                "PRESS SPACE TO continue",
                 &mut resources.font,
                 TEXT_COLOR,
                 &canvas.white_texture(),
@@ -361,6 +369,20 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             }
         }
         GameState::Shopping => {
+            canvas.camera_view_ratio(
+                table_size / 2. - Vec2::splat(BORDER_SIZE)
+                    + Vec2::new(0., (table_size.x / ASPECT_RATIO - table_size.y) / 2.),
+                table_size.x / 2.,
+                ASPECT_RATIO,
+            );
+
+            canvas.draw_rect(
+                Vec2::ZERO,
+                WORLD_DIM,
+                color::rgba(0., 0., 0., 0.4),
+                &canvas.white_texture(),
+            );
+
             canvas.camera_view_ratio(
                 table_size / 2. + Vec2::new(0., (table_size.x / ASPECT_RATIO - table_size.y) / 2.),
                 table_size.x / 2.,
@@ -433,9 +455,9 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             );
 
             canvas.draw_text(
-                Vec2::new(0.4, 0.3),
+                Vec2::new(0.65, 0.3),
                 0.1,
-                "Press space to restart once you are done.",
+                "PRESS SPACE TO retry",
                 &mut resources.font,
                 TEXT_COLOR,
                 &canvas.white_texture(),
@@ -588,7 +610,7 @@ fn draw_upgrade(
             && mouse_position.y > button_position.y
             && mouse_position.y < button_position.y + BUTTON_SIZE.y
             && *level < price.len()
-            && *total_money > price[*level]
+            && *total_money >= price[*level]
         {
             *total_money -= price[*level];
             *level += 1;
@@ -613,14 +635,14 @@ async fn async_main() {
     let mut game = Game {
         moves: BTreeMap::new(),
         world: World::new(0, 0, 0, 0),
-        state: GameState::Menu,
+        state: GameState::Shopping,
         selected: None,
         aim_assist_level: 0,
         max_speed_level: 0,
         profitability_level: 0,
         start_mass_level: 0,
         sliding_level: 0,
-        total_money: 0,
+        total_money: 1000,
         best_round: 0,
     };
 
