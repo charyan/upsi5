@@ -499,6 +499,25 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
         }
     }
 
+    canvas.camera_view_ratio(Vec2::ZERO, 1., ASPECT_RATIO);
+
+    if input::is_button_down(Button::Left) {
+        canvas.draw_rect(
+            canvas.screen_to_world_pos(input::mouse_position().as_vec2()) + Vec2::new(-0.01, -0.05),
+            Vec2::new(0.037, 0.037),
+            color::WHITE,
+            &resources.hand_closed,
+        );
+    } else {
+        canvas.draw_rect(
+            canvas.screen_to_world_pos(input::mouse_position().as_vec2())
+                + Vec2::new(-0.016, -0.05),
+            Vec2::new(0.05, 0.05),
+            color::WHITE,
+            &resources.hand_open,
+        );
+    }
+
     canvas.flush();
 }
 

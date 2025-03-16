@@ -21,7 +21,8 @@ pub struct Resources {
     pub title_screen: TextureRect,
     pub tuto_1: TextureRect,
     pub tuto_2: TextureRect,
-
+    pub hand_open: TextureRect,
+    pub hand_closed: TextureRect,
     pub font: Font,
     pub sounds_slimeslime: Audio,
     pub sounds_coin: Audio,
@@ -65,6 +66,9 @@ impl Resources {
         let tuto_1 = load_texture(canvas, include_bytes!("../assets/tutomecanics1.png")).await;
         let tuto_2 = load_texture(canvas, include_bytes!("../assets/tutosendgame2.png")).await;
 
+        let hand_open = load_texture(canvas, include_bytes!("../assets/handopen.png")).await;
+        let hand_closed = load_texture(canvas, include_bytes!("../assets/handclosed.png")).await;
+
         let font = font::from_bytes(include_bytes!("../assets/modak.ttf"));
 
         let sounds_slimeslime =
@@ -98,6 +102,8 @@ impl Resources {
             slide_upgrade,
             speed_upgrade,
             button,
+            hand_open,
+            hand_closed,
             sounds_border,
             sounds_enemyenemy,
             sounds_slimeenemy,

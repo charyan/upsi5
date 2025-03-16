@@ -531,11 +531,11 @@ impl Canvas2d {
 
     /// Set the view matrix so that world coordinates corresponds to pixels on the canvas
     pub fn pixel_perfect_view(&mut self) {
-        self.view_matrix = Mat3::from_cols(
+        self.set_view_matrix(Mat3::from_cols(
             Vec3::new(2. / self.canvas.width() as f32, 0., 0.),
             Vec3::new(0., 2. / self.canvas.height() as f32, 0.),
             Vec3::new(-1., -1., 1.),
-        );
+        ));
     }
 
     /// Set the view matrix to a camera centered at `cam_pos` which can see at a distance `view_radius` on the left and right.
