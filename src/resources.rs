@@ -18,6 +18,10 @@ pub struct Resources {
     pub coin_upgrade: TextureRect,
     pub aim_upgrade: TextureRect,
     pub button: TextureRect,
+    pub title_screen: TextureRect,
+    pub tuto_1: TextureRect,
+    pub tuto_2: TextureRect,
+
     pub font: Font,
     pub sounds_slimeslime: Audio,
     pub sounds_coin: Audio,
@@ -57,6 +61,9 @@ impl Resources {
         let coin_upgrade = load_texture(canvas, include_bytes!("../assets/coinupgrade.png")).await;
         let aim_upgrade = load_texture(canvas, include_bytes!("../assets/aimupgrade.png")).await;
         let button = load_texture(canvas, include_bytes!("../assets/button.png")).await;
+        let title_screen = load_texture(canvas, include_bytes!("../assets/titlescreen.png")).await;
+        let tuto_1 = load_texture(canvas, include_bytes!("../assets/tutomecanics1.png")).await;
+        let tuto_2 = load_texture(canvas, include_bytes!("../assets/tutosendgame2.png")).await;
 
         let font = font::from_bytes(include_bytes!("../assets/modak.ttf"));
 
@@ -97,6 +104,9 @@ impl Resources {
             sounds_button,
             main_theme,
             sounds_falling,
+            title_screen,
+            tuto_1,
+            tuto_2,
         }
     }
 }

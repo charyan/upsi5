@@ -3,6 +3,7 @@ use glam::Mat3;
 use glam::Vec2;
 use glam::Vec4;
 use marmalade::audio;
+use marmalade::console;
 use marmalade::dom_stack;
 use marmalade::draw_scheduler;
 use marmalade::input;
@@ -15,6 +16,7 @@ use marmalade::render::color;
 use marmalade::tick_scheduler::TickScheduler;
 use resources::Resources;
 use std::collections::BTreeMap;
+use std::fmt::format;
 use std::mem;
 use std::time::Duration;
 use world::Sounds;
@@ -38,6 +40,8 @@ const ICON_SPACE: Vec2 = Vec2::splat(ICON_SIZE.x + 0.15);
 const BUTTON_SIZE: Vec2 = Vec2::new(0.2, 0.06);
 const BUTTON_SPACE: f32 = 0.1;
 const BUTTON_FONT_SIZE: f32 = 0.04;
+
+const AIM_ASSIST_LENGTH: f32 = 1.;
 
 const TEXT_COLOR: Vec4 = color::WHITE;
 
@@ -89,6 +93,8 @@ enum GameState {
     GameOver,
     Shopping,
     Menu,
+    Tuto1,
+    Tuto2,
 }
 
 struct Game {
@@ -105,7 +111,7 @@ struct Game {
     best_round: usize,
 }
 
-fn draw_line(canvas: &mut Canvas2d, position: Vec2, length: Vec2, width: f32) {
+fn draw_line(canvas: &mut Canvas2d, position: Vec2, length: Vec2, width: f32, color: Vec4) {
     let angle = (-length).to_angle();
 
     let line = length.length();
@@ -121,7 +127,7 @@ fn draw_line(canvas: &mut Canvas2d, position: Vec2, length: Vec2, width: f32) {
     canvas.draw_rect(
         position - Vec2::new(0., width / 2.),
         Vec2::new(line, width),
-        color::WHITE,
+        color,
         &canvas.white_texture(),
     );
 
@@ -165,6 +171,44 @@ fn draw_game(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources) 
             },
         );
     }
+}
+
+fn draw_aim(canvas: &mut Canvas2d, start_pos: Vec2, length: Vec2) {
+    let length = length * AIM_ASSIST_LENGTH * -1.;
+
+    let mut target = start_pos + length;
+
+    if target.x < 0. {
+        let ratio: f32 = length.y / length.x;
+        let diff_x = 0. - target.x;
+        target.x = 0.;
+        target.y += diff_x * ratio;
+    } else if target.x > WORLD_DIM.x {
+        let ratio: f32 = length.y / length.x;
+        let diff_x = target.x - WORLD_DIM.x;
+        target.y -= diff_x * ratio;
+        target.x = WORLD_DIM.x
+    }
+
+    if target.y < 0. {
+        let ratio: f32 = length.x / length.y;
+        let diff_y = 0. - target.y;
+        target.y = 0.;
+        target.x += diff_y * ratio;
+    } else if target.y > WORLD_DIM.y {
+        let ratio: f32 = length.x / length.y;
+        let diff_y = target.y - WORLD_DIM.y;
+        target.x -= diff_y * ratio;
+        target.y = WORLD_DIM.y
+    }
+
+    draw_line(
+        canvas,
+        start_pos,
+        (target - start_pos) * -1.,
+        0.001,
+        color::rgb(1., 0., 0.),
+    );
 }
 
 fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources) {
@@ -229,8 +273,8 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             for (i, b) in game.world.balls.iter().enumerate() {
                 if let Some(&m) = game.moves.get(&i) {
                     let b = b.borrow();
-
-                    draw_line(canvas, b.position, m, 0.005);
+                    draw_line(canvas, b.position, m, 0.005, color::WHITE);
+                    draw_line(canvas, b.position, m * -1., 0.005, color::WHITE);
                 }
             }
 
@@ -251,8 +295,14 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
                 let mut move_vector = canvas.screen_to_world_pos(input::mouse_position().as_vec2())
                     - game.world.balls[selected].borrow().position;
 
+                let pos_vector = move_vector.clone();
+
                 if move_vector.length() > 0.15 {
                     move_vector *= 0.15 / move_vector.length();
+                }
+
+                if pos_vector.length() > 0.2 {
+                    game.selected = None
                 }
 
                 if !input::is_button_down(Button::Left) {
@@ -264,7 +314,15 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
 
                 draw_ball(canvas, ball_pos, 0.15, &resources.aimcircle);
 
-                draw_line(canvas, ball_pos, move_vector, 0.01);
+                draw_line(canvas, ball_pos, move_vector, 0.01, color::WHITE);
+                draw_line(canvas, ball_pos, move_vector * -1., 0.01, color::WHITE);
+
+                if game.aim_assist_level > 0 {
+                    draw_aim(canvas, ball_pos, move_vector.normalize_or_zero());
+                }
+                if game.aim_assist_level > 1 {
+                    draw_aim(canvas, ball_pos, move_vector.normalize_or_zero() * -1.);
+                }
             }
 
             if game.moves.len() > 0 && input::is_key_pressed(Key::Space) {
@@ -395,31 +453,47 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             }
         }
         GameState::Menu => {
-            canvas.camera_view_ratio(
-                table_size / 2. + Vec2::new(0., (table_size.x / ASPECT_RATIO - table_size.y) / 2.),
-                table_size.x / 2.,
-                ASPECT_RATIO,
-            );
+            canvas.camera_view_ratio(Vec2::ZERO, 1., ASPECT_RATIO);
 
-            canvas.draw_text(
-                WORLD_DIM / 2. - Vec2::new(0.37, 0.),
-                0.4,
-                "SPooL",
-                &mut resources.font,
-                TEXT_COLOR,
-                &canvas.white_texture(),
-            );
-
-            canvas.draw_text(
-                Vec2::new(WORLD_DIM.x / 2. - 0.3, 0.35),
-                0.1,
-                "Press space to start.",
-                &mut resources.font,
-                TEXT_COLOR,
-                &canvas.white_texture(),
+            canvas.draw_rect(
+                Vec2::ZERO - Vec2::new(2., 2. / ASPECT_RATIO) / 2.,
+                Vec2::new(2., 2. / ASPECT_RATIO),
+                color::WHITE,
+                &resources.title_screen,
             );
 
             if input::is_key_pressed(Key::Space) {
+                game.state = GameState::Tuto1
+            }
+        }
+        GameState::Tuto1 => {
+            canvas.camera_view_ratio(Vec2::ZERO, 1., ASPECT_RATIO);
+
+            canvas.draw_rect(
+                Vec2::ZERO - Vec2::new(2., 2. / ASPECT_RATIO) / 2.,
+                Vec2::new(2., 2. / ASPECT_RATIO),
+                color::WHITE,
+                &resources.tuto_1,
+            );
+
+            if input::is_key_pressed(Key::Space) {
+                game.state = GameState::Tuto2
+            }
+            if input::is_key_pressed(Key::Escape) {
+                game.state = GameState::Playing
+            }
+        }
+        GameState::Tuto2 => {
+            canvas.camera_view_ratio(Vec2::ZERO, 1., ASPECT_RATIO);
+
+            canvas.draw_rect(
+                Vec2::ZERO - Vec2::new(2., 2. / ASPECT_RATIO) / 2.,
+                Vec2::new(2., 2. / ASPECT_RATIO),
+                color::WHITE,
+                &resources.tuto_2,
+            );
+
+            if input::is_key_pressed(Key::Space) || input::is_key_pressed(Key::Escape) {
                 game.state = GameState::Playing
             }
         }
@@ -518,12 +592,12 @@ async fn async_main() {
         world: World::new(0, 0, 0, 0),
         state: GameState::Menu,
         selected: None,
-        aim_assist_level: 0,
+        aim_assist_level: 2,
         max_speed_level: 0,
         profitability_level: 0,
         start_mass_level: 0,
         sliding_level: 0,
-        total_money: 0,
+        total_money: 100000,
         best_round: 0,
     };
 
