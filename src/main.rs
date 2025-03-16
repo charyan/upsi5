@@ -616,12 +616,12 @@ async fn async_main() {
         world: World::new(0, 0, 0, 0),
         state: GameState::Menu,
         selected: None,
-        aim_assist_level: 2,
+        aim_assist_level: 0,
         max_speed_level: 0,
         profitability_level: 0,
         start_mass_level: 0,
         sliding_level: 0,
-        total_money: 100000,
+        total_money: 0,
         best_round: 0,
     };
 

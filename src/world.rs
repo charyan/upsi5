@@ -79,8 +79,18 @@ impl World {
             entity::BallType::Player,
         );
 
+        let x1 = WORLD_DIM.x / 4. * 2.45 + ENEMY_BALL_SIZE * 3f32.sqrt();
+        let x2 = WORLD_DIM.x / 2. - (x1 - WORLD_DIM.x / 2.);
+
         new_world.add_ball(
-            Vec2::new(WORLD_DIM.x, WORLD_DIM.y) - Vec2::splat(2. * HOLE_RADIUS),
+            Vec2::new(x1, WORLD_DIM.y / 2. + ENEMY_BALL_SIZE),
+            ENEMY_BALL_SIZE,
+            ENEMY_MASS,
+            SLIDING_SCALING[sliding_level],
+            entity::BallType::Enemy(EnemyData { timer: 5 }),
+        );
+        new_world.add_ball(
+            Vec2::new(x1, WORLD_DIM.y / 2. - ENEMY_BALL_SIZE),
             ENEMY_BALL_SIZE,
             ENEMY_MASS,
             SLIDING_SCALING[sliding_level],
@@ -88,7 +98,14 @@ impl World {
         );
 
         new_world.add_ball(
-            Vec2::ZERO + Vec2::splat(2. * HOLE_RADIUS),
+            Vec2::new(x2, WORLD_DIM.y / 2. + ENEMY_BALL_SIZE),
+            ENEMY_BALL_SIZE,
+            ENEMY_MASS,
+            SLIDING_SCALING[sliding_level],
+            entity::BallType::Enemy(EnemyData { timer: 5 }),
+        );
+        new_world.add_ball(
+            Vec2::new(x2, WORLD_DIM.y / 2. - ENEMY_BALL_SIZE),
             ENEMY_BALL_SIZE,
             ENEMY_MASS,
             SLIDING_SCALING[sliding_level],
