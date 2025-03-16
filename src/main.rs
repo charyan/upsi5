@@ -642,7 +642,7 @@ async fn async_main() {
         profitability_level: 0,
         start_mass_level: 0,
         sliding_level: 0,
-        total_money: 1000,
+        total_money: 0,
         best_round: 0,
     };
 
