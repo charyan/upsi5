@@ -6,9 +6,12 @@ edition = "2024"
 [profile.dev]
 opt-level = 1
 
+[profile.release]
+lto = "fat"
+codegen-units = 1
+
 [dependencies]
 console_error_panic_hook = "0.1.7"
 glam = "0.30.0"
 marmalade = { path = "marmalade" }
-rand = {version="0.9.0", default-features = false}
 wasm-bindgen-futures = "0.4.50"
