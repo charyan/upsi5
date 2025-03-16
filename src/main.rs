@@ -71,7 +71,7 @@ fn game_tick(game: &mut Game, resources: &mut Resources) {
                     audio::play(&resources.sounds_coin, 1.);
                 }
                 Sounds::Border => {
-                    audio::play(&resources.sounds_border, 5.);
+                    audio::play(&resources.sounds_border, 3.);
                 }
                 Sounds::EnemyEnemy => {
                     audio::play(&resources.sounds_enemyenemy, 1.);
