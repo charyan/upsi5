@@ -30,7 +30,7 @@ const BORDER_SIZE: f32 = 0.068;
 const PRICE_MAX_SPEED: [u64; 4] = [500, 1500, 3000, 5000];
 const PRICE_START_MASS: [u64; 4] = [500, 1500, 3000, 5000];
 const PRICE_AIM_ASSIST: [u64; 3] = [500, 1500, 3000];
-const PRICE_PROFITABILITY: [u64; 4] = [500, 1500, 3000, 5000];
+const PRICE_PROFITABILITY: [u64; 2] = [500, 1500];
 const PRICE_SLIDING: [u64; 4] = [500, 1500, 3000, 5000];
 
 const ICON_SIZE: Vec2 = Vec2::splat(0.2);

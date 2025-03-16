@@ -24,7 +24,7 @@ const MAX_POS_TRY: i32 = 100;
 
 const MAX_SPEED_SCALING: [f32; 5] = [0.01, 0.01, 0.02, 0.03, 0.04];
 const START_MASS_SCALING: [f32; 5] = [0.3, 0.5, 1., 1.5, 2.];
-const PROFITABILITY_SCALING: [u64; 5] = [1, 2, 3, 4, 5];
+const PROFITABILITY_SCALING: [u64; 3] = [1, 2, 3];
 const SLIDING_SCALING: [f32; 5] = [0.9994, 0.99945, 0.9995, 0.99955, 0.9996];
 
 pub const ENEMY_ROUND: [usize; 20] = [1, 0, 1, 0, 1, 2, 1, 0, 3, 1, 0, 2, 0, 1, 2, 0, 1, 2, 3, 1];
