@@ -29,7 +29,7 @@ const BORDER_SIZE: f32 = 0.068;
 
 const PRICE_MAX_SPEED: [u64; 4] = [500, 1500, 3000, 5000];
 const PRICE_START_MASS: [u64; 4] = [500, 1500, 3000, 5000];
-const PRICE_AIM_ASSIST: [u64; 2] = [500, 1500];
+const PRICE_AIM_ASSIST: [u64; 3] = [500, 1500, 3000];
 const PRICE_PROFITABILITY: [u64; 4] = [500, 1500, 3000, 5000];
 const PRICE_SLIDING: [u64; 4] = [500, 1500, 3000, 5000];
 
@@ -39,7 +39,7 @@ const BUTTON_SIZE: Vec2 = Vec2::new(0.2, 0.06);
 const BUTTON_SPACE: f32 = 0.1;
 const BUTTON_FONT_SIZE: f32 = 0.04;
 
-const AIM_ASSIST_LENGTH: f32 = 1.;
+const AIM_ASSIST_LENGTH: f32 = WORLD_DIM.x / 3.;
 
 const TEXT_COLOR: Vec4 = color::WHITE;
 
@@ -172,7 +172,7 @@ fn draw_game(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources) 
 }
 
 fn draw_aim(canvas: &mut Canvas2d, start_pos: Vec2, length: Vec2) {
-    let length = length * AIM_ASSIST_LENGTH * -1.;
+    let length = length * -1.;
 
     let mut target = start_pos + length;
 
@@ -315,11 +315,36 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
                 draw_line(canvas, ball_pos, move_vector, 0.01, color::WHITE);
                 draw_line(canvas, ball_pos, move_vector * -1., 0.01, color::WHITE);
 
-                if game.aim_assist_level > 0 {
-                    draw_aim(canvas, ball_pos, move_vector.normalize_or_zero());
+                if game.aim_assist_level == 1 {
+                    draw_aim(
+                        canvas,
+                        ball_pos,
+                        move_vector.normalize_or_zero() * AIM_ASSIST_LENGTH,
+                    );
                 }
-                if game.aim_assist_level > 1 {
-                    draw_aim(canvas, ball_pos, move_vector.normalize_or_zero() * -1.);
+                if game.aim_assist_level == 2 {
+                    draw_aim(
+                        canvas,
+                        ball_pos,
+                        move_vector.normalize_or_zero() * AIM_ASSIST_LENGTH,
+                    );
+                    draw_aim(
+                        canvas,
+                        ball_pos,
+                        move_vector.normalize_or_zero() * AIM_ASSIST_LENGTH * -1.,
+                    );
+                }
+                if game.aim_assist_level == 3 {
+                    draw_aim(
+                        canvas,
+                        ball_pos,
+                        move_vector.normalize_or_zero() * WORLD_DIM.x,
+                    );
+                    draw_aim(
+                        canvas,
+                        ball_pos,
+                        move_vector.normalize_or_zero() * WORLD_DIM.x * -1.,
+                    );
                 }
             }
 
@@ -637,12 +662,12 @@ async fn async_main() {
         world: World::new(0, 0, 0, 0),
         state: GameState::Menu,
         selected: None,
-        aim_assist_level: 0,
+        aim_assist_level: 1,
         max_speed_level: 0,
         profitability_level: 0,
         start_mass_level: 0,
         sliding_level: 0,
-        total_money: 0,
+        total_money: 10000,
         best_round: 0,
     };
 
