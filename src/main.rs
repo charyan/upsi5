@@ -3,7 +3,6 @@ use glam::Mat3;
 use glam::Vec2;
 use glam::Vec4;
 use marmalade::audio;
-use marmalade::console;
 use marmalade::dom_stack;
 use marmalade::draw_scheduler;
 use marmalade::input;
@@ -16,7 +15,6 @@ use marmalade::render::color;
 use marmalade::tick_scheduler::TickScheduler;
 use resources::Resources;
 use std::collections::BTreeMap;
-use std::fmt::format;
 use std::mem;
 use std::time::Duration;
 use world::Sounds;
@@ -325,7 +323,7 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
                 }
             }
 
-            if game.moves.len() > 0 && input::is_key_pressed(Key::Space) {
+            if !game.moves.is_empty() && input::is_key_pressed(Key::Space) {
                 game.state = GameState::Running;
                 audio::play(&resources.sounds_shot, 1.);
 
@@ -334,6 +332,7 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
                 game.world.launch_round(moves);
             }
         }
+
         GameState::Running => {
             draw_game(canvas, game, resources);
         }
