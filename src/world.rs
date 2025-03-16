@@ -9,7 +9,7 @@ use marmalade::{console, rand};
 
 const COLLISION_SMOOTHNESS: f32 = 0.03;
 pub const COIN_RADIUS: f32 = 0.01;
-const COIN_PRICE: u32 = 100;
+const COIN_PRICE: u64 = 100;
 pub const WORLD_DIM: Vec2 = Vec2::new(1.926, 1.01);
 const HOLE_RADIUS: f32 = 0.038;
 const HOLES: [Vec2; 6] = [
@@ -24,7 +24,7 @@ const MAX_POS_TRY: i32 = 100;
 
 const MAX_SPEED_SCALING: [f32; 5] = [0.01, 0.01, 0.02, 0.03, 0.04];
 const START_MASS_SCALING: [f32; 5] = [0.3, 0.5, 1., 1.5, 3.];
-const PROFITABILITY_SCALING: [u32; 5] = [1, 2, 5, 10, 25];
+const PROFITABILITY_SCALING: [u64; 5] = [1, 2, 5, 10, 25];
 const SLIDING_SCALING: [f32; 5] = [0.9994, 0.99945, 0.9995, 0.99955, 0.9996];
 
 pub const ENEMY_ROUND: [usize; 20] = [1, 0, 1, 0, 1, 2, 1, 0, 3, 1, 0, 2, 0, 1, 2, 0, 1, 2, 3, 1];
@@ -45,7 +45,7 @@ pub enum Sounds {
 
 pub struct World {
     pub balls: Vec<RefCell<entity::Ball>>,
-    pub money: u32,
+    pub money: u64,
     pub round: usize,
     pub coins: Vec<Vec2>,
     game_over: bool,

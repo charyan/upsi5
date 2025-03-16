@@ -27,11 +27,11 @@ mod world;
 
 const BORDER_SIZE: f32 = 0.068;
 
-const PRICE_MAX_SPEED: [u32; 4] = [500, 1500, 3000, 5000];
-const PRICE_START_MASS: [u32; 4] = [500, 1500, 3000, 5000];
-const PRICE_AIM_ASSIST: [u32; 2] = [500, 1500];
-const PRICE_PROFITABILITY: [u32; 4] = [500, 1500, 3000, 5000];
-const PRICE_SLIDING: [u32; 4] = [500, 1500, 3000, 5000];
+const PRICE_MAX_SPEED: [u64; 4] = [500, 1500, 3000, 5000];
+const PRICE_START_MASS: [u64; 4] = [500, 1500, 3000, 5000];
+const PRICE_AIM_ASSIST: [u64; 2] = [500, 1500];
+const PRICE_PROFITABILITY: [u64; 4] = [500, 1500, 3000, 5000];
+const PRICE_SLIDING: [u64; 4] = [500, 1500, 3000, 5000];
 
 const ICON_SIZE: Vec2 = Vec2::splat(0.2);
 const ICON_SPACE: Vec2 = Vec2::splat(ICON_SIZE.x + 0.15);
@@ -53,6 +53,9 @@ fn game_tick(game: &mut Game, resources: &mut Resources) {
         if game.world.is_game_over() {
             game.state = GameState::GameOver;
             game.total_money += game.world.money;
+            game.world.money = 0;
+
+            game.best_round = game.best_round.max(game.world.round);
         }
         for sound in sounds {
             match sound {
@@ -93,12 +96,13 @@ struct Game {
     state: GameState,
     moves: BTreeMap<usize, Vec2>,
     selected: Option<usize>,
-    total_money: u32,
+    total_money: u64,
     max_speed_level: usize,
     start_mass_level: usize,
     aim_assist_level: usize,
     profitability_level: usize,
     sliding_level: usize,
+    best_round: usize,
 }
 
 fn draw_line(canvas: &mut Canvas2d, position: Vec2, length: Vec2, width: f32) {
@@ -191,6 +195,26 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
         color::WHITE,
         &canvas.white_texture(),
     );
+
+    canvas.draw_text(
+        Vec2::new(1., 1.225),
+        0.1,
+        &format!("Round: {}", game.world.round),
+        &mut resources.font,
+        color::WHITE,
+        &canvas.white_texture(),
+    );
+
+    if game.best_round > 0 {
+        canvas.draw_text(
+            Vec2::new(1.5, 1.225),
+            0.1,
+            &format!("Best round: {}", game.best_round),
+            &mut resources.font,
+            color::WHITE,
+            &canvas.white_texture(),
+        );
+    }
 
     canvas.draw_rect(
         Vec2::new(0., 0.),
@@ -407,9 +431,9 @@ fn draw_upgrade(
     canvas: &mut Canvas2d,
     position: Vec2,
     icon_texture: &TextureRect,
-    price: &[u32],
+    price: &[u64],
     level: &mut usize,
-    total_money: &mut u32,
+    total_money: &mut u64,
     resources: &mut Resources,
     mouse_position: &Option<Vec2>,
 ) {
@@ -499,6 +523,7 @@ async fn async_main() {
         start_mass_level: 0,
         sliding_level: 0,
         total_money: 0,
+        best_round: 0,
     };
 
     let mut tick_scheduler = TickScheduler::new(Duration::from_millis(1));

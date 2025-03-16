@@ -72,7 +72,7 @@ impl Resources {
         let sounds_button = audio::from_bytes(include_bytes!("../sounds/button.flac")).await;
         let sounds_falling = audio::from_bytes(include_bytes!("../sounds/falling.flac")).await;
 
-        let main_theme = audio::from_bytes(include_bytes!("../sounds/sebastien.mp3")).await;
+        let main_theme = audio::from_bytes(include_bytes!("../sounds/ludwig.flac")).await;
 
         Self {
             pool_table,
