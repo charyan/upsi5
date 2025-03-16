@@ -266,7 +266,8 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
 
                 draw_line(canvas, ball_pos, move_vector, 0.01);
             }
-            if input::is_key_pressed(Key::Space) {
+
+            if game.moves.len() > 0 && input::is_key_pressed(Key::Space) {
                 game.state = GameState::Running;
                 audio::play(&resources.sounds_shot, 1.);
 
