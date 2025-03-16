@@ -239,12 +239,12 @@ impl World {
 
             for (coin_index, coin) in self.coins.iter().enumerate() {
                 let ball = ball_cell.borrow();
-                if ball.letypedelaboule == BallType::Player {
-                    if ball.radius + COIN_RADIUS - (ball.position - coin).length() > 0. {
-                        coin_trash.push(coin_index);
-                        sounds.insert(Sounds::Coin);
-                        self.money += COIN_PRICE * PROFITABILITY_SCALING[self.profitability_level];
-                    }
+                if ball.letypedelaboule == BallType::Player
+                    && ball.radius + COIN_RADIUS - (ball.position - coin).length() > 0.
+                {
+                    coin_trash.push(coin_index);
+                    sounds.insert(Sounds::Coin);
+                    self.money += COIN_PRICE * PROFITABILITY_SCALING[self.profitability_level];
                 }
             }
         }
@@ -289,9 +289,9 @@ impl World {
         false
     }
 
-    pub fn launch_round(&mut self, velocities: BTreeMap<usize, Vec2>) {
+    pub fn launch_round(&mut self, velocities: &BTreeMap<usize, Vec2>) {
         let mut new_balls = vec![];
-        for (index, velocity) in &velocities {
+        for (index, velocity) in velocities {
             let ball = self.balls[*index].borrow();
             let velocity = *velocity * MAX_SPEED_SCALING[self.max_speed_level];
             let ball1 = Ball::new(

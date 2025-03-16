@@ -15,8 +15,6 @@ use marmalade::render::color;
 use marmalade::tick_scheduler::TickScheduler;
 use resources::Resources;
 use std::collections::BTreeMap;
-use std::mem;
-use std::thread::current;
 use std::time::Duration;
 use world::Sounds;
 use world::WORLD_DIM;
@@ -45,8 +43,6 @@ const AIM_ASSIST_LENGTH: f32 = WORLD_DIM.x / 3.;
 const TEXT_COLOR: Vec4 = color::WHITE;
 
 const ASPECT_RATIO: f32 = 1.5;
-
-const TUTO_SPACE_TIMER: u32 = 1000;
 
 fn game_tick(game: &mut Game, resources: &mut Resources) {
     if game.state == GameState::Running {
@@ -296,7 +292,7 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
                 let mut move_vector = canvas.screen_to_world_pos(input::mouse_position().as_vec2())
                     - game.world.balls[selected].borrow().position;
 
-                let pos_vector = move_vector.clone();
+                let pos_vector = move_vector;
 
                 if move_vector.length() > 0.15 {
                     move_vector *= 0.15 / move_vector.length();
@@ -351,7 +347,7 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
                 }
             }
 
-            if game.best_round == 0 && game.moves.len() > 0 && game.world.round == 0 {
+            if game.best_round == 0 && !game.moves.is_empty() && game.world.round == 0 {
                 canvas.draw_text(
                     Vec2::new(0.3, 0.2),
                     0.2,
@@ -366,9 +362,9 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
                 game.state = GameState::Running;
                 audio::play(&resources.sounds_shot, 1.);
 
-                let moves = mem::replace(&mut game.moves, BTreeMap::new());
+                game.world.launch_round(&game.moves);
 
-                game.world.launch_round(moves);
+                game.moves.clear();
             }
         }
 
