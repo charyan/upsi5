@@ -662,7 +662,7 @@ async fn async_main() {
         world: World::new(0, 0, 0, 0),
         state: GameState::Menu,
         selected: None,
-        aim_assist_level: 1,
+        aim_assist_level: 0,
         max_speed_level: 0,
         profitability_level: 0,
         start_mass_level: 0,
