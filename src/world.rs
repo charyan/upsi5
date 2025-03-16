@@ -72,7 +72,7 @@ impl World {
             coins: Vec::new(),
         };
         new_world.add_ball(
-            Vec2::new(WORLD_DIM.x / 4., WORLD_DIM.y / 2.),
+            Vec2::new(WORLD_DIM.x / 2., WORLD_DIM.y / 2.),
             PLAYER_START_SIZE,
             START_MASS_SCALING[start_mass_level],
             SLIDING_SCALING[sliding_level],
@@ -80,27 +80,15 @@ impl World {
         );
 
         new_world.add_ball(
-            Vec2::new(WORLD_DIM.x / 4. * 2.5, WORLD_DIM.y / 2.),
+            Vec2::new(WORLD_DIM.x, WORLD_DIM.y) - Vec2::splat(2. * HOLE_RADIUS),
             ENEMY_BALL_SIZE,
             ENEMY_MASS,
             SLIDING_SCALING[sliding_level],
             entity::BallType::Enemy(EnemyData { timer: 5 }),
         );
+
         new_world.add_ball(
-            Vec2::new(
-                WORLD_DIM.x / 4. * 2.5 + ENEMY_BALL_SIZE * 3f32.sqrt(),
-                WORLD_DIM.y / 2. + ENEMY_BALL_SIZE,
-            ),
-            ENEMY_BALL_SIZE,
-            ENEMY_MASS,
-            SLIDING_SCALING[sliding_level],
-            entity::BallType::Enemy(EnemyData { timer: 5 }),
-        );
-        new_world.add_ball(
-            Vec2::new(
-                WORLD_DIM.x / 4. * 2.5 + ENEMY_BALL_SIZE * 3f32.sqrt(),
-                WORLD_DIM.y / 2. - ENEMY_BALL_SIZE,
-            ),
+            Vec2::ZERO + Vec2::splat(2. * HOLE_RADIUS),
             ENEMY_BALL_SIZE,
             ENEMY_MASS,
             SLIDING_SCALING[sliding_level],
