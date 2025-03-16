@@ -16,6 +16,7 @@ use marmalade::tick_scheduler::TickScheduler;
 use resources::Resources;
 use std::collections::BTreeMap;
 use std::mem;
+use std::thread::current;
 use std::time::Duration;
 use world::Sounds;
 use world::WORLD_DIM;
@@ -44,6 +45,8 @@ const AIM_ASSIST_LENGTH: f32 = WORLD_DIM.x / 3.;
 const TEXT_COLOR: Vec4 = color::WHITE;
 
 const ASPECT_RATIO: f32 = 1.5;
+
+const TUTO_SPACE_TIMER: u32 = 1000;
 
 fn game_tick(game: &mut Game, resources: &mut Resources) {
     if game.state == GameState::Running {
@@ -346,6 +349,17 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
                         move_vector.normalize_or_zero() * WORLD_DIM.x * -1.,
                     );
                 }
+            }
+
+            if game.best_round == 0 && game.moves.len() > 0 && game.world.round == 0 {
+                canvas.draw_text(
+                    Vec2::new(0.3, 0.2),
+                    0.2,
+                    "PRESS SPACE TO shoot",
+                    &mut resources.font,
+                    color::WHITE,
+                    &canvas.white_texture(),
+                );
             }
 
             if !game.moves.is_empty() && input::is_key_pressed(Key::Space) {

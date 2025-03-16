@@ -185,7 +185,9 @@ impl World {
             ball.borrow_mut().speed = Vec2::ZERO;
         }
         self.spawn_enemies();
-        self.round += 1;
+        if !self.game_over {
+            self.round += 1;
+        }
     }
 
     pub fn is_game_over(&self) -> bool {
