@@ -635,7 +635,7 @@ async fn async_main() {
     let mut game = Game {
         moves: BTreeMap::new(),
         world: World::new(0, 0, 0, 0),
-        state: GameState::Shopping,
+        state: GameState::Menu,
         selected: None,
         aim_assist_level: 0,
         max_speed_level: 0,
