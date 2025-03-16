@@ -5,7 +5,7 @@ use std::{
     collections::BTreeSet,
     rc::Rc,
 };
-use wasm_bindgen::{prelude::Closure, JsCast};
+use wasm_bindgen::{JsCast, prelude::Closure};
 use web_sys::{AddEventListenerOptions, Event, KeyboardEvent, MouseEvent, WheelEvent};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq, PartialOrd, Ord, Debug)]
@@ -332,6 +332,12 @@ impl Input {
     pub fn is_key_pressed(&self, key: Key) -> bool {
         self.keys_pressed.borrow_mut().remove(&key)
     }
+
+    #[must_use]
+    pub fn reset_pressed(&self) {
+        self.keys_pressed.borrow_mut().clear();
+        self.buttons_pressed.borrow_mut().clear();
+    }
 }
 
 thread_local! {
@@ -364,4 +370,8 @@ pub fn wheel_scroll() -> f64 {
 
 pub fn mouse_position() -> IVec2 {
     INPUT.with(Input::position)
+}
+
+pub fn reset_pressed() {
+    INPUT.with(Input::reset_pressed);
 }

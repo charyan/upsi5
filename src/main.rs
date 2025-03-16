@@ -75,7 +75,7 @@ fn game_tick(game: &mut Game, resources: &mut Resources) {
                     audio::play(&resources.sounds_slimeenemy, 1.);
                 }
                 Sounds::Falling => {
-                    audio::play(&resources.sounds_falling, 1.);
+                    audio::play(&resources.sounds_falling, 2.);
                 }
             }
         }
@@ -495,7 +495,7 @@ fn draw_upgrade(
         {
             *total_money -= price[*level];
             *level += 1;
-            audio::play(&resources.sounds_button, 1.);
+            audio::play(&resources.sounds_button, 3.);
         }
     }
 }
@@ -511,7 +511,7 @@ async fn async_main() {
 
     let mut resources = Resources::load(&mut canvas).await;
 
-    audio::play_loop(&resources.main_theme, 0.5);
+    audio::play_loop(&resources.main_theme, 0.3);
 
     let mut game = Game {
         moves: BTreeMap::new(),
@@ -534,6 +534,8 @@ async fn async_main() {
         }
 
         render_tick(&mut canvas, &mut game, &mut resources);
+
+        input::reset_pressed();
     });
 }
 
