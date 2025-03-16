@@ -70,7 +70,7 @@ fn game_tick(game: &mut Game, resources: &mut Resources) {
                     audio::play(&resources.sounds_coin, 1.);
                 }
                 Sounds::Border => {
-                    audio::play(&resources.sounds_border, 1.);
+                    audio::play(&resources.sounds_border, 5.);
                 }
                 Sounds::EnemyEnemy => {
                     audio::play(&resources.sounds_enemyenemy, 1.);
@@ -463,7 +463,8 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             );
 
             if input::is_key_pressed(Key::Space) {
-                game.state = GameState::Tuto1
+                game.state = GameState::Tuto1;
+                audio::play(&resources.sounds_button, 3.);
             }
         }
         GameState::Tuto1 => {
@@ -477,9 +478,12 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             );
 
             if input::is_key_pressed(Key::Space) {
-                game.state = GameState::Tuto2
+                game.state = GameState::Tuto2;
+                audio::play(&resources.sounds_button, 3.);
             }
+
             if input::is_key_pressed(Key::Escape) {
+                audio::play(&resources.sounds_button, 3.);
                 game.state = GameState::Playing
             }
         }
@@ -494,6 +498,7 @@ fn render_tick(canvas: &mut Canvas2d, game: &mut Game, resources: &mut Resources
             );
 
             if input::is_key_pressed(Key::Space) || input::is_key_pressed(Key::Escape) {
+                audio::play(&resources.sounds_button, 3.);
                 game.state = GameState::Playing
             }
         }
